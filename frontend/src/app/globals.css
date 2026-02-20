@@ -1,11 +1,11 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+
 /* ─────────────────────────────────────────────────────────────
    Pharmacy Assistant Design System (PADS) — globals.css
    Faithfully implements FRONTEND_GUIDELINES.md v1.0
    Inter is loaded via next/font/google in layout.tsx (no FOUT).
    ───────────────────────────────────────────────────────────── */
-@import "tailwindcss";
-/* Fira Code for monospace — not available via next/font in this config */
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
 /* ═══════════════════════════════════════════════════════════
    DESIGN TOKENS  (PADS Color Palette – §2)
