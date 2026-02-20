@@ -1,108 +1,163 @@
-import { Header } from "@/components/Header";
+"use client";
+
+import { useEffect, useState } from 'react';
+import { Package, CheckCircle, Clock, CreditCard } from 'lucide-react';
 
 interface Order {
-    "Patient ID": string;
-    "Patient Age": number;
-    "Patient Gender": string;
-    "Purchase Date": number;
+    id?: string;
     "Product Name": string;
+    "Purchase Date": number | string;
+    _purchaseDateISO?: string;
     "Quantity": number;
     "Total Price (EUR)": number;
-    "Dosage Frequency": string;
-    "Prescription Required": string;
+    status?: string;
 }
 
-async function getOrders(): Promise<Order[]> {
-    try {
-        const res = await fetch('http://localhost:3001/api/orders', {
-            cache: 'no-store',
-            next: { revalidate: 0 }
-        });
+export default function OrdersPage() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
 
-        if (!res.ok) {
-            throw new Error('Failed to fetch orders');
-        }
+    useEffect(() => {
+        fetch('http://localhost:3001/api/orders')
+            .then(r => r.json())
+            .then(d => { setOrders(d); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, []);
 
-        return res.json();
-    } catch (error) {
-        console.error("Error fetching orders:", error);
-        return [];
-    }
-}
+    const formatDate = (order: Order) => {
+        if (order._purchaseDateISO) return new Date(order._purchaseDateISO).toLocaleDateString();
+        const d = order["Purchase Date"];
+        if (typeof d === 'number') return new Date((d - 25569) * 86400 * 1000).toLocaleDateString();
+        return d ? new Date(d as string).toLocaleDateString() : 'N/A';
+    };
 
-function formatDate(excelSerial: number): string {
-    // Excel base date: Dec 30, 1899
-    const date = new Date((excelSerial - 25569) * 86400 * 1000);
-    return date.toLocaleDateString();
-}
+    const getStatusBadge = (s: string) => {
+        const sl = (s || 'Pending').toLowerCase();
+        if (sl === 'completed' || sl === 'delivered') return 'badge-success';
+        if (sl === 'cancelled') return 'badge-error';
+        if (sl === 'processing') return 'badge-info';
+        return 'badge-neutral';
+    };
 
-export default async function OrdersPage() {
-    const orders = await getOrders();
+    const totalSpend = orders.reduce((sum, o) => sum + (o["Total Price (EUR)"] || 0), 0);
+    const completed = orders.filter(o => (o.status || '').toLowerCase() === 'completed').length;
+
+    const stats = [
+        {
+            label: 'Total Orders',
+            value: loading ? '—' : orders.length.toString(),
+            icon: <Package className="w-6 h-6" style={{ color: 'var(--color-primary-600)' }} />,
+            accent: 'stat-accent-blue',
+        },
+        {
+            label: 'Completed',
+            value: loading ? '—' : completed.toString(),
+            icon: <CheckCircle className="w-6 h-6" style={{ color: 'var(--color-success-600)' }} />,
+            accent: 'stat-accent-green',
+        },
+        {
+            label: 'Total Spend',
+            value: loading ? '—' : `€${totalSpend.toFixed(2)}`,
+            icon: <CreditCard className="w-6 h-6" style={{ color: 'var(--color-warning-600)' }} />,
+            accent: 'stat-accent-amber',
+        },
+    ];
 
     return (
-        <div className="min-h-screen flex flex-col font-sans bg-slate-50">
-            <Header />
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+            <div className="page-wrapper py-8">
 
-            <main className="flex-grow pt-24 pb-12 px-6">
-                <div className="container mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-slate-800">Order History</h1>
-                        <p className="text-slate-500 mt-2">View past orders and patient purchase data.</p>
-                    </div>
-
-                    <div className="glass-card overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-200/60 bg-slate-50/50">
-                                        <th className="p-4 font-semibold text-slate-600">Patient ID</th>
-                                        <th className="p-4 font-semibold text-slate-600">Product</th>
-                                        <th className="p-4 font-semibold text-slate-600">Date</th>
-                                        <th className="p-4 font-semibold text-slate-600">Qty</th>
-                                        <th className="p-4 font-semibold text-slate-600">Total Price</th>
-                                        <th className="p-4 font-semibold text-slate-600">Prescription</th>
-                                        <th className="p-4 font-semibold text-slate-600">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {orders.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="p-8 text-center text-slate-500">
-                                                No orders found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        orders.map((order, index) => (
-                                            <tr key={index} className="border-b border-slate-100 hover:bg-white/40 transition-colors">
-                                                <td className="p-4 font-medium text-slate-700">{order["Patient ID"]}</td>
-                                                <td className="p-4 text-slate-800 font-medium max-w-xs truncate" title={order["Product Name"]}>
-                                                    {order["Product Name"]}
-                                                </td>
-                                                <td className="p-4 text-slate-600">{formatDate(order["Purchase Date"])}</td>
-                                                <td className="p-4 text-slate-600">{order["Quantity"]}</td>
-                                                <td className="p-4 font-medium text-slate-800">€{order["Total Price (EUR)"].toFixed(2)}</td>
-                                                <td className="p-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${order["Prescription Required"] === "Yes"
-                                                            ? "bg-amber-100 text-amber-700"
-                                                            : "bg-green-100 text-green-700"
-                                                        }`}>
-                                                        {order["Prescription Required"]}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                                        Completed
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div className="mb-6">
+                    <h1 className="page-title">My Orders</h1>
+                    <p className="page-subtitle">Your complete medication order history</p>
                 </div>
-            </main>
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    {stats.map((s, i) => (
+                        <div key={i} className={`stat-card ${s.accent}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="stat-card-label">{s.label}</p>
+                                {s.icon}
+                            </div>
+                            <p className="stat-card-value">{s.value}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Table */}
+                <div className="table-container">
+                    <div
+                        className="px-4 py-3 border-b flex items-center gap-2"
+                        style={{ borderColor: 'var(--color-neutral-200)', backgroundColor: 'var(--color-neutral-50)' }}
+                    >
+                        <Clock className="w-4 h-4" style={{ color: 'var(--color-neutral-400)' }} />
+                        <h2 className="text-sm font-semibold" style={{ color: 'var(--color-neutral-700)' }}>Order History</h2>
+                    </div>
+
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th className="table-header-cell">Date</th>
+                                <th className="table-header-cell">Medication</th>
+                                <th className="table-header-cell text-center">Qty</th>
+                                <th className="table-header-cell text-right">Total</th>
+                                <th className="table-header-cell text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                [1, 2, 3].map(i => (
+                                    <tr key={i} className="table-row">
+                                        {[1, 2, 3, 4, 5].map(j => (
+                                            <td key={j} className="table-cell">
+                                                <div className="skeleton h-4 w-full" />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : orders.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <Package className="w-8 h-8" style={{ color: 'var(--color-neutral-400)' }} />
+                                            </div>
+                                            <h3 className="empty-state-title">No orders yet</h3>
+                                            <p className="empty-state-desc">
+                                                When you place an order, it will appear here.
+                                            </p>
+                                            <a href="/" className="btn btn-primary btn-md">
+                                                Browse Medications
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                orders.map((order, idx) => (
+                                    <tr key={idx} className="table-row">
+                                        <td className="table-cell" style={{ color: 'var(--color-neutral-500)' }}>
+                                            {formatDate(order)}
+                                        </td>
+                                        <td className="table-cell font-medium" style={{ color: 'var(--color-neutral-900)', fontSize: '0.9375rem' }}>
+                                            {order["Product Name"]}
+                                        </td>
+                                        <td className="table-cell text-center">{order["Quantity"]}</td>
+                                        <td className="table-cell text-right font-semibold" style={{ color: 'var(--color-neutral-900)' }}>
+                                            €{(order["Total Price (EUR)"] || 0).toFixed(2)}
+                                        </td>
+                                        <td className="table-cell text-center">
+                                            <span className={`badge ${getStatusBadge(order.status || '')}`}>
+                                                {order.status || 'Pending'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
