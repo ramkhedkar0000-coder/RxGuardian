@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+import { supabase } from "@/lib/supabase";
 
 interface Order {
     "Patient ID": string;
@@ -14,85 +15,108 @@ interface Order {
 
 async function getOrders(): Promise<Order[]> {
     try {
-        const res = await fetch('http://localhost:3001/api/orders', {
-            cache: 'no-store',
-            next: { revalidate: 0 }
-        });
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*');
 
-        if (!res.ok) {
-            throw new Error('Failed to fetch orders');
+        if (error) {
+            throw error;
         }
 
-        return res.json();
+        return data || [];
     } catch (error) {
-        console.error("Error fetching orders:", error);
+        console.error("Error fetching orders from Supabase:", error);
         return [];
     }
 }
 
 function formatDate(excelSerial: number): string {
-    // Excel base date: Dec 30, 1899
     const date = new Date((excelSerial - 25569) * 86400 * 1000);
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export default async function OrdersPage() {
     const orders = await getOrders();
 
     return (
-        <div className="min-h-screen flex flex-col font-sans bg-slate-50">
+        <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20">
             <Header />
 
-            <main className="flex-grow pt-24 pb-12 px-6">
-                <div className="container mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-slate-800">Order History</h1>
-                        <p className="text-slate-500 mt-2">View past orders and patient purchase data.</p>
+            <main className="flex-grow pt-32 pb-20 px-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-12">
+                        <div className="inline-flex items-center space-x-2 bg-muted px-3 py-1 rounded-full mb-4">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Log Archives</span>
+                        </div>
+                        <h1 className="text-4xl font-bold tracking-tight text-foreground">Order History</h1>
+                        <p className="text-muted-foreground mt-2 max-w-2xl font-medium">
+                            Comprehensive record of all medical transactions and patient prescriptions processed by RxGuardian.
+                        </p>
                     </div>
 
-                    <div className="glass-card overflow-hidden">
+                    <div className="glass overflow-hidden rounded-3xl border border-border/50">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="border-b border-slate-200/60 bg-slate-50/50">
-                                        <th className="p-4 font-semibold text-slate-600">Patient ID</th>
-                                        <th className="p-4 font-semibold text-slate-600">Product</th>
-                                        <th className="p-4 font-semibold text-slate-600">Date</th>
-                                        <th className="p-4 font-semibold text-slate-600">Qty</th>
-                                        <th className="p-4 font-semibold text-slate-600">Total Price</th>
-                                        <th className="p-4 font-semibold text-slate-600">Prescription</th>
-                                        <th className="p-4 font-semibold text-slate-600">Status</th>
+                                    <tr className="border-b border-border/50 bg-muted/30">
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Reference</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Medical Product</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Transaction Date</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Qty</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Security</th>
+                                        <th className="p-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-border/30">
                                     {orders.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="p-8 text-center text-slate-500">
-                                                No orders found.
+                                            <td colSpan={7} className="p-20 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-4xl mb-4 opacity-20">📁</span>
+                                                    <p className="text-muted-foreground font-medium text-lg">No secure transaction logs found.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : (
                                         orders.map((order, index) => (
-                                            <tr key={index} className="border-b border-slate-100 hover:bg-white/40 transition-colors">
-                                                <td className="p-4 font-medium text-slate-700">{order["Patient ID"]}</td>
-                                                <td className="p-4 text-slate-800 font-medium max-w-xs truncate" title={order["Product Name"]}>
-                                                    {order["Product Name"]}
+                                            <tr key={index} className="hover:bg-primary/[0.02] transition-colors group">
+                                                <td className="p-5">
+                                                    <span className="text-sm font-mono text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                                                        {order["Patient ID"]}
+                                                    </span>
                                                 </td>
-                                                <td className="p-4 text-slate-600">{formatDate(order["Purchase Date"])}</td>
-                                                <td className="p-4 text-slate-600">{order["Quantity"]}</td>
-                                                <td className="p-4 font-medium text-slate-800">€{order["Total Price (EUR)"].toFixed(2)}</td>
-                                                <td className="p-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${order["Prescription Required"] === "Yes"
-                                                            ? "bg-amber-100 text-amber-700"
-                                                            : "bg-green-100 text-green-700"
+                                                <td className="p-5">
+                                                    <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                                        {order["Product Name"]}
+                                                    </div>
+                                                </td>
+                                                <td className="p-5 text-sm text-muted-foreground font-medium">
+                                                    {formatDate(order["Purchase Date"])}
+                                                </td>
+                                                <td className="p-5 text-sm text-muted-foreground font-bold">
+                                                    {order["Quantity"]}
+                                                </td>
+                                                <td className="p-5">
+                                                    <span className="text-lg font-bold text-foreground">
+                                                        €{(order["Total Price (EUR)"] ?? 0).toFixed(2)}
+                                                    </span>
+                                                </td>
+                                                <td className="p-5">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${order["Prescription Required"] === "Yes"
+                                                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                                        : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                                         }`}>
-                                                        {order["Prescription Required"]}
+                                                        {order["Prescription Required"] === "Yes" ? "Locked" : "Bypass"}
                                                     </span>
                                                 </td>
-                                                <td className="p-4">
-                                                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                                        Completed
-                                                    </span>
+                                                <td className="p-5">
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                        <span className="text-xs font-bold text-primary uppercase tracking-widest">
+                                                            Validated
+                                                        </span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -103,6 +127,16 @@ export default async function OrdersPage() {
                     </div>
                 </div>
             </main>
+
+            <footer className="border-t border-border/40 py-12 px-8 mt-auto">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-2">
+                        <span className="font-bold text-foreground">RxGuardian</span>
+                        <span>Archive Terminal</span>
+                    </div>
+                    <p>© 2026 RxGuardian Technologies. Secured log system.</p>
+                </div>
+            </footer>
         </div>
     );
 }
