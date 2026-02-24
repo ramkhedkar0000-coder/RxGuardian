@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import { ShoppingCart, CheckCircle, Loader, Package } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingCart, Package } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 
 // Normalised product shape from new productService
 interface Product {
@@ -15,32 +17,19 @@ interface Product {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-    const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-    const [errMsg, setErrMsg] = useState('');
+    const { addItem } = useCart();
+    const { addToast } = useToast();
 
-    const handleAddToCart = async () => {
-        setStatus('loading');
-        setErrMsg('');
-        try {
-            const res = await fetch('http://localhost:3001/api/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    productName: product.name,
-                    quantity: 1,
-                    price: product.price,
-                    patientId: 'GUEST-001',
-                }),
-            });
-
-            if (!res.ok) throw new Error('Order failed');
-            setStatus('done');
-            setTimeout(() => setStatus('idle'), 2500);
-        } catch (e: any) {
-            setErrMsg(e.message || 'Could not place order');
-            setStatus('error');
-            setTimeout(() => setStatus('idle'), 3000);
-        }
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent navigating to product details when clicking add to cart
+        addItem(product);
+        addToast({
+            type: 'success',
+            message: 'Added to Cart',
+            description: `${product.name} has been added to your cart.`,
+            duration: 2500,
+        });
     };
 
     const stockStatus =
@@ -48,13 +37,14 @@ export default function ProductCard({ product }: { product: Product }) {
             product.stock < 15 ? 'low' : 'ok';
 
     return (
-        <div
-            className="card card-hover flex flex-col gap-3"
-            style={{ padding: '1.25rem' }}
+        <Link
+            href={`/product/${product.id}`}
+            className="card card-hover flex flex-col gap-3 group"
+            style={{ padding: '1.25rem', textDecoration: 'none' }}
         >
             {/* Product icon placeholder */}
             <div
-                className="flex items-center justify-center w-10 h-10 rounded-lg mb-1"
+                className="flex items-center justify-center w-10 h-10 rounded-lg mb-1 group-hover:scale-110 transition-transform duration-300"
                 style={{ backgroundColor: 'var(--color-primary-50)' }}
             >
                 <Package className="w-5 h-5" style={{ color: 'var(--color-primary-600)' }} />
@@ -62,7 +52,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
             {/* Name */}
             <h3
-                className="font-semibold leading-snug line-clamp-2"
+                className="font-semibold leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors"
                 style={{ fontSize: '0.9375rem', color: 'var(--color-neutral-900)' }}
                 title={product.name}
             >
@@ -121,32 +111,16 @@ export default function ProductCard({ product }: { product: Product }) {
                     {product.price > 0 ? `€${product.price.toFixed(2)}` : 'Free'}
                 </span>
 
-                {status === 'error' && (
-                    <p className="text-xs" style={{ color: 'var(--color-error-600)' }}>
-                        {errMsg}
-                    </p>
-                )}
-
-                {status !== 'error' && (
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={status !== 'idle' || stockStatus === 'out'}
-                        className="btn btn-primary btn-sm"
-                        aria-label={`Add ${product.name} to cart`}
-                    >
-                        {status === 'loading' && (
-                            <Loader className="w-4 h-4 animate-spin" aria-hidden />
-                        )}
-                        {status === 'done' && (
-                            <CheckCircle className="w-4 h-4" aria-hidden />
-                        )}
-                        {status === 'idle' && (
-                            <ShoppingCart className="w-4 h-4" aria-hidden />
-                        )}
-                        {status === 'done' ? 'Ordered!' : 'Add to cart'}
-                    </button>
-                )}
+                <button
+                    onClick={handleAddToCart}
+                    disabled={stockStatus === 'out'}
+                    className="btn btn-primary btn-sm"
+                    aria-label={`Add ${product.name} to cart`}
+                >
+                    <ShoppingCart className="w-4 h-4" aria-hidden />
+                    Add to cart
+                </button>
             </div>
-        </div>
+        </Link>
     );
 }

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '@/context/AuthContext';
+import { CartProvider } from '@/context/CartContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { ToastContainer } from '@/components/Toast';
 
 /**
  * Inter loaded via next/font (automatically optimized, no layout shift)
@@ -32,7 +35,12 @@ export default function RootLayout({
       */}
       <body style={{ fontFamily: "var(--font-inter, var(--font-sans))" }}>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+            <ToastContainer />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

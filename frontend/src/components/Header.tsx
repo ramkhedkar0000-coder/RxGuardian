@@ -3,11 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Pill, Bell, LogOut, Package, LayoutDashboard, Bot } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { Pill, Bell, LogOut, Package, LayoutDashboard, Bot, ShoppingCart } from 'lucide-react';
+import { CartDrawer } from './CartDrawer';
+import { useState } from 'react';
 
 export function Header() {
     const { user, logout } = useAuth();
+    const { totalItems } = useCart();
     const pathname = usePathname();
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
@@ -118,14 +123,30 @@ export function Header() {
                         ) : (
                             <Link
                                 href="/login"
-                                className="btn btn-primary btn-sm"
+                                className="btn btn-primary btn-sm hidden sm:inline-flex"
                             >
                                 Sign in
                             </Link>
                         )}
+
+                        <button
+                            onClick={() => setIsCartOpen(true)}
+                            className="relative p-2 rounded-lg text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 transition-colors duration-150"
+                            aria-label="Open Cart"
+                        >
+                            <ShoppingCart className="w-5 h-5 text-primary-600" />
+                            {totalItems > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>
+
+            {/* Slide-out Cart Drawer */}
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </header>
     );
 }
