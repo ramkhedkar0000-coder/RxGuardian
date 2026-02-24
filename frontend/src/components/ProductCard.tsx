@@ -1,70 +1,151 @@
 "use client";
 
-import { Product } from "@/types";
-import { useCart } from "@/context/CartContext";
+import { useState } from 'react';
+import { ShoppingCart, CheckCircle, Loader, Package } from 'lucide-react';
 
-interface ProductCardProps {
-    product: Product;
+// Normalised product shape from new productService
+interface Product {
+    id: string;
+    name: string;
+    pzn?: string;
+    price: number;
+    packageSize?: string;
+    description?: string;
+    stock: number;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-    const { addToCart } = useCart();
+export default function ProductCard({ product }: { product: Product }) {
+    const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+    const [errMsg, setErrMsg] = useState('');
+
+    const handleAddToCart = async () => {
+        setStatus('loading');
+        setErrMsg('');
+        try {
+            const res = await fetch('http://localhost:3001/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productName: product.name,
+                    quantity: 1,
+                    price: product.price,
+                    patientId: 'GUEST-001',
+                }),
+            });
+
+            if (!res.ok) throw new Error('Order failed');
+            setStatus('done');
+            setTimeout(() => setStatus('idle'), 2500);
+        } catch (e: any) {
+            setErrMsg(e.message || 'Could not place order');
+            setStatus('error');
+            setTimeout(() => setStatus('idle'), 3000);
+        }
+    };
+
+    const stockStatus =
+        product.stock === 0 ? 'out' :
+            product.stock < 15 ? 'low' : 'ok';
 
     return (
-        <div className="glass-card h-full flex flex-col group overflow-hidden">
-            <div className="relative p-2">
-                <div className="h-44 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-primary/5 group-hover:to-primary/10 transition-colors duration-500 overflow-hidden">
-                    <span className="text-5xl group-hover:scale-110 transition-transform duration-700 ease-out">💊</span>
-
-                    {/* Subtle inner shadow overlay */}
-                    <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.02)] pointer-events-none" />
-                </div>
-
-                {/* Sale Badge Example (Optional) */}
-                <div className="absolute top-4 right-4 px-2 py-1 bg-white/80 backdrop-blur-md rounded-md text-[10px] font-bold text-primary border border-white/50 shadow-sm">
-                    PHARMACY GRADE
-                </div>
+        <div
+            className="card card-hover flex flex-col gap-3"
+            style={{ padding: '1.25rem' }}
+        >
+            {/* Product icon placeholder */}
+            <div
+                className="flex items-center justify-center w-10 h-10 rounded-lg mb-1"
+                style={{ backgroundColor: 'var(--color-primary-50)' }}
+            >
+                <Package className="w-5 h-5" style={{ color: 'var(--color-primary-600)' }} />
             </div>
 
-            <div className="p-5 flex flex-col flex-grow">
-                <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-foreground leading-tight line-clamp-2 min-h-[2.8rem]">
-                        {product["product name"]}
-                    </h3>
-                </div>
+            {/* Name */}
+            <h3
+                className="font-semibold leading-snug line-clamp-2"
+                style={{ fontSize: '0.9375rem', color: 'var(--color-neutral-900)' }}
+                title={product.name}
+            >
+                {product.name}
+            </h3>
 
-                <div className="flex items-center space-x-2 mb-4">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                        {product["package size"]}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground/60">PZN {product["pzn"]}</span>
-                </div>
-
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-6 leading-relaxed">
-                    {product["descriptions"]}
+            {/* Description */}
+            {product.description && (
+                <p
+                    className="text-xs line-clamp-2"
+                    style={{ color: 'var(--color-neutral-500)' }}
+                >
+                    {product.description}
                 </p>
+            )}
 
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-border/40">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground font-medium">Retail Price</span>
-                        <span className="text-xl font-bold text-foreground">
-                            €{product["price rec"].toFixed(2)}
-                        </span>
-                    </div>
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addToCart(product);
-                        }}
-                        className="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition-all shadow-md shadow-primary/20 active:scale-95 group/btn"
+            {/* Meta badges row */}
+            <div className="flex flex-wrap gap-1.5">
+                {product.packageSize && (
+                    <span className="badge badge-neutral">{product.packageSize}</span>
+                )}
+                {product.pzn && (
+                    <span
+                        className="text-xs font-mono"
+                        style={{ color: 'var(--color-neutral-400)' }}
+                        title="Pharmazentralnummer"
                     >
-                        <span className="flex items-center space-x-2">
-                            <span className="text-sm font-semibold px-1">Add</span>
-                            <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                        </span>
+                        PZN: {product.pzn}
+                    </span>
+                )}
+            </div>
+
+            {/* Stock badge */}
+            <div className="flex items-center gap-2">
+                {stockStatus === 'out' && (
+                    <span className="badge badge-error">Out of Stock</span>
+                )}
+                {stockStatus === 'low' && (
+                    <span className="badge badge-warning">Low Stock · {product.stock} left</span>
+                )}
+                {stockStatus === 'ok' && (
+                    <span className="badge badge-success">In Stock</span>
+                )}
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-grow" />
+
+            {/* Price + CTA */}
+            <div className="flex items-center justify-between mt-auto pt-3"
+                style={{ borderTop: '1px solid var(--color-neutral-100)' }}>
+                <span
+                    className="text-lg font-bold"
+                    style={{ color: 'var(--color-neutral-900)' }}
+                >
+                    {product.price > 0 ? `€${product.price.toFixed(2)}` : 'Free'}
+                </span>
+
+                {status === 'error' && (
+                    <p className="text-xs" style={{ color: 'var(--color-error-600)' }}>
+                        {errMsg}
+                    </p>
+                )}
+
+                {status !== 'error' && (
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={status !== 'idle' || stockStatus === 'out'}
+                        className="btn btn-primary btn-sm"
+                        aria-label={`Add ${product.name} to cart`}
+                    >
+                        {status === 'loading' && (
+                            <Loader className="w-4 h-4 animate-spin" aria-hidden />
+                        )}
+                        {status === 'done' && (
+                            <CheckCircle className="w-4 h-4" aria-hidden />
+                        )}
+                        {status === 'idle' && (
+                            <ShoppingCart className="w-4 h-4" aria-hidden />
+                        )}
+                        {status === 'done' ? 'Ordered!' : 'Add to cart'}
                     </button>
-                </div>
+                )}
             </div>
         </div>
     );

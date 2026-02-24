@@ -1,97 +1,131 @@
 "use client";
 
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
-import { CartDrawer } from './CartDrawer';
-import { useState } from 'react';
-import { AuthModal } from './AuthModal';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { Pill, Bell, LogOut, Package, LayoutDashboard, Bot } from 'lucide-react';
 
 export function Header() {
-    const { totalItems, setIsCartOpen } = useCart();
-    const [isAuthOpen, setIsAuthOpen] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { user, logout } = useAuth();
+    const pathname = usePathname();
 
-    const navLinks = [
-        { name: 'Pharmacy', href: '/' },
-        { name: 'History', href: '/orders' },
-        { name: 'Analysis', href: '/dashboard' },
+    const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+
+    const patientLinks = [
+        { href: '/', label: 'Medications', icon: <Pill className="w-4 h-4" /> },
+        { href: '/orders', label: 'My Orders', icon: <Package className="w-4 h-4" /> },
+        { href: '/chat', label: 'AI Assistant', icon: <Bot className="w-4 h-4" /> },
     ];
 
+    const adminLinks = [
+        { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+        { href: '/admin/orders', label: 'Orders', icon: <Package className="w-4 h-4" /> },
+        { href: '/admin/inventory', label: 'Inventory', icon: <Pill className="w-4 h-4" /> },
+        { href: '/admin/logs', label: 'AI Logs', icon: <Bot className="w-4 h-4" /> },
+    ];
+
+    const links = user?.role === 'admin' ? adminLinks : patientLinks;
+    const initials = user?.name
+        ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+        : 'U';
+
     return (
-        <header className="glass-header px-8 py-4 fixed top-0 w-full">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <Link href="/" className="flex items-center space-x-2 group">
-                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                        <span className="text-white text-xl">🛡️</span>
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-foreground">
-                        RxGuardian
-                    </span>
-                </Link>
-
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center space-x-8">
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.name}
-                            href={link.href}
-                            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+        <header className="site-header">
+            <div className="page-wrapper">
+                <div className="flex items-center justify-between h-16">
+                    {/* Logo */}
+                    <Link href="/" className="flex items-center gap-2 group no-underline">
+                        <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: 'var(--color-primary-500)' }}
                         >
-                            {link.name}
-                        </Link>
-                    ))}
-                </nav>
-
-                <div className="flex items-center space-x-4 md:space-x-6">
-                    <button
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative p-2 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                        <span className="text-xl">🛒</span>
-                        {totalItems > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
-
-                    <div
-                        onClick={() => setIsAuthOpen(true)}
-                        className="w-10 h-10 rounded-full border border-border p-0.5 hover:border-primary/50 transition-colors cursor-pointer"
-                    >
-                        <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-200 to-slate-400 overflow-hidden flex items-center justify-center">
-                            <span className="text-xs text-white">JD</span>
+                            <Pill className="w-4 h-4 text-white" />
                         </div>
-                    </div>
+                        <span
+                            className="text-lg font-bold"
+                            style={{ color: 'var(--color-neutral-900)' }}
+                        >
+                            RXGuardians
+                        </span>
+                    </Link>
 
-                    {/* Mobile Menu Toggle */}
-                    <button
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden p-2 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                        <span className="text-xl">{isMobileMenuOpen ? '✕' : '☰'}</span>
-                    </button>
+                    {/* Desktop Navigation */}
+                    {user && (
+                        <nav className="hidden md:flex items-center gap-1">
+                            {links.map(link => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className={`nav-link flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors duration-150 ${isActive(link.href) ? 'nav-link-active bg-blue-50' : 'hover:bg-neutral-100'
+                                        }`}
+                                    style={{
+                                        color: isActive(link.href)
+                                            ? 'var(--color-primary-600)'
+                                            : 'var(--color-neutral-700)',
+                                        fontWeight: isActive(link.href) ? 600 : 500,
+                                        fontSize: '0.875rem',
+                                    }}
+                                >
+                                    {link.icon}
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </nav>
+                    )}
+
+                    {/* Right Actions */}
+                    <div className="flex items-center gap-2">
+                        {user ? (
+                            <>
+                                {/* Role badge */}
+                                <span
+                                    className={`badge hidden sm:inline-flex ${user.role === 'admin' ? 'badge-warning' : 'badge-info'
+                                        }`}
+                                >
+                                    {user.role === 'admin' ? 'Admin' : 'Patient'}
+                                </span>
+
+                                {/* Avatar */}
+                                <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+                                    style={{
+                                        backgroundColor: 'var(--color-primary-100)',
+                                        color: 'var(--color-primary-700)',
+                                    }}
+                                    title={user.name || 'User'}
+                                >
+                                    {initials}
+                                </div>
+
+                                {/* Logout */}
+                                <button
+                                    onClick={logout}
+                                    className="p-2 rounded-lg transition-colors duration-150"
+                                    style={{ color: 'var(--color-neutral-500)' }}
+                                    onMouseEnter={e => {
+                                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-neutral-100)';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-neutral-700)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-neutral-500)';
+                                    }}
+                                    aria-label="Log out"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                </button>
+                            </>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="btn btn-primary btn-sm"
+                            >
+                                Sign in
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
-
-            {/* Mobile Navigation */}
-            <div className={`md:hidden fixed inset-x-0 top-[73px] bg-background/80 backdrop-blur-2xl border-b border-border/50 transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <nav className="flex flex-col p-6 space-y-4">
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.name}
-                            href={link.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="text-lg font-bold text-foreground hover:text-primary transition-colors"
-                        >
-                            {link.name}
-                        </Link>
-                    ))}
-                </nav>
-            </div>
-
-            <CartDrawer />
-            <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
         </header>
     );
 }

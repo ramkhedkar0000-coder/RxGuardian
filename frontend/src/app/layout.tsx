@@ -1,38 +1,39 @@
 import type { Metadata } from "next";
-import React from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from '@/context/AuthContext';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * Inter loaded via next/font (automatically optimized, no layout shift)
+ * PADS §2 Typography — Inter as the primary sans-serif family
+ */
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "RxGuardian | AI-Secured Pharmacy",
-  description: "Next-gen pharmacy management and medication delivery guarded by precision AI systems.",
+  title: "RXGuardians — AI-Powered Pharmacy Assistant",
+  description:
+    "Intelligent medication management, refill predictions, and AI-assisted ordering for patients and pharmacists.",
+  keywords: ["pharmacy", "medication", "AI assistant", "refill", "prescription", "healthcare"],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
-        <CartProvider>
+    <html lang="en" className={inter.variable}>
+      {/*
+        inter.variable exposes the CSS variable --font-inter on <html>.
+        globals.css references --font-inter via --font-sans fallback chain.
+      */}
+      <body style={{ fontFamily: "var(--font-inter, var(--font-sans))" }}>
+        <AuthProvider>
           {children}
-        </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

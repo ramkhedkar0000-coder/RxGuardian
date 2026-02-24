@@ -1,147 +1,201 @@
-import { Header } from "@/components/Header";
-import { supabase } from "@/lib/supabase";
+"use client";
 
-interface Order {
-    "Patient ID": string;
-    "Patient Age": number;
-    "Patient Gender": string;
-    "Purchase Date": number;
-    "Product Name": string;
-    "Quantity": number;
-    "Total Price (EUR)": number;
-    "Dosage Frequency": string;
-    "Prescription Required": string;
+import { useEffect, useState } from 'react';
+import { Bell, AlertTriangle, CheckCircle, Package } from 'lucide-react';
+
+interface RefillAlert {
+    patient_id: string;
+    medication: string;
+    last_order_date: string;
+    days_since_last_order: number;
+    recommendation: string;
 }
 
-async function getOrders(): Promise<Order[]> {
-    try {
-        const { data, error } = await supabase
-            .from('orders')
-            .select('*');
+export default function DashboardPage() {
+    const [alerts, setAlerts] = useState<RefillAlert[]>([]);
+    const [loading, setLoading] = useState(true);
 
-        if (error) {
-            throw error;
-        }
+    useEffect(() => {
+        fetch('http://localhost:3001/api/refill-alerts')
+            .then(r => r.json())
+            .then(d => { setAlerts(d); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, []);
 
-        return data || [];
-    } catch (error) {
-        console.error("Error fetching orders from Supabase:", error);
-        return [];
-    }
-}
+    const urgent = alerts.filter(a => a.days_since_last_order > 25);
+    const regular = alerts.filter(a => a.days_since_last_order <= 25);
 
-export default async function DashboardPage() {
-    const orders = await getOrders();
+    const notify = (patientId: string) => {
+        if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+        alert(`Refill notification sent to patient ${patientId}`);
+    };
 
-    // Derived Stats
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + (order["Total Price (EUR)"] ?? 0), 0);
-    const uniquePatients = new Set(orders.map(o => o["Patient ID"])).size;
-
-    // Simple top selling calculation
-    const counts: Record<string, number> = {};
-    orders.forEach(o => {
-        counts[o["Product Name"]] = (counts[o["Product Name"]] || 0) + o["Quantity"];
-    });
-    const topProduct = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+    const stats = [
+        {
+            label: 'Total Alerts',
+            value: alerts.length,
+            icon: <Bell className="w-6 h-6" style={{ color: 'var(--color-primary-600)' }} />,
+            accent: 'stat-accent-blue',
+            valueColor: 'var(--color-neutral-900)',
+        },
+        {
+            label: 'Urgent (>25 days)',
+            value: urgent.length,
+            icon: <AlertTriangle className="w-6 h-6" style={{ color: 'var(--color-warning-600)' }} />,
+            accent: 'stat-accent-amber',
+            valueColor: urgent.length > 0 ? 'var(--color-warning-700)' : 'var(--color-neutral-900)',
+        },
+        {
+            label: 'Regular Monitoring',
+            value: regular.length,
+            icon: <CheckCircle className="w-6 h-6" style={{ color: 'var(--color-success-600)' }} />,
+            accent: 'stat-accent-green',
+            valueColor: 'var(--color-success-700)',
+        },
+    ];
 
     return (
-        <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20">
-            <Header />
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+            <div className="page-wrapper py-8">
 
-            <main className="flex-grow pt-32 pb-20 px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="mb-12">
-                        <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full mb-6">
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-primary">Live Insights</span>
+                {/* Page header */}
+                <div className="mb-6">
+                    <h1 className="page-title">Refill Alerts Dashboard</h1>
+                    <p className="page-subtitle">Monitor patients who may need medication refills</p>
+                </div>
+
+                {/* Stat cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    {stats.map((s, i) => (
+                        <div key={i} className={`stat-card ${s.accent}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="stat-card-label">{s.label}</p>
+                                {s.icon}
+                            </div>
+                            <p className="stat-card-value" style={{ color: s.valueColor }}>
+                                {loading ? (
+                                    <span className="skeleton inline-block h-8 w-12 rounded" />
+                                ) : s.value}
+                            </p>
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight text-foreground">Operational Analysis</h1>
-                        <p className="text-muted-foreground mt-2 max-w-2xl font-medium">
-                            Real-time monitoring of pharmacy throughput, financial performance, and patient distribution.
-                        </p>
-                    </div>
+                    ))}
+                </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                        {[
-                            { label: "Total Transactions", value: totalOrders, unit: "Orders", icon: "📊" },
-                            { label: "Gross Revenue", value: `€${totalRevenue.toFixed(2)}`, unit: "Real-time", icon: "💳" },
-                            { label: "Active Patients", value: uniquePatients, unit: "Unique IDs", icon: "👥" },
-                            { label: "Top Product", value: topProduct.split(' ')[0], unit: "By Volume", icon: "⭐" },
-                        ].map((stat, i) => (
-                            <div key={i} className="glass-card p-6 flex flex-col justify-between">
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-2xl">{stat.icon}</span>
-                                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{stat.unit}</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-tight mb-1">{stat.label}</h3>
-                                    <p className="text-3xl font-extrabold text-foreground truncate">{stat.value}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* System Health Card */}
-                        <div className="lg:col-span-2 glass p-8 rounded-3xl border border-border/50">
-                            <h3 className="text-xl font-bold text-foreground mb-8">Pharmacy Throughput (Last 7 Days)</h3>
-                            <div className="flex items-end space-x-1 h-48 mb-6">
-                                {[45, 67, 32, 89, 54, 76, 92].map((v, i) => (
-                                    <div key={i} className="flex-1 bg-primary/20 hover:bg-primary/40 rounded-t-lg relative group transition-all" style={{ height: `${v}%` }}>
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {v} Orders
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-4 border-t border-border/20">
-                                <span>Mon</span>
-                                <span>Tue</span>
-                                <span>Wed</span>
-                                <span>Thu</span>
-                                <span>Fri</span>
-                                <span>Sat</span>
-                                <span>Sun</span>
-                            </div>
-                        </div>
-
-                        {/* Status Panel */}
-                        <div className="glass p-8 rounded-3xl border border-border/50">
-                            <h3 className="text-xl font-bold text-foreground mb-8">Shield Status</h3>
-                            <div className="space-y-6">
-                                {[
-                                    { label: "Database Sync", status: "Nominal", color: "bg-emerald-500" },
-                                    { label: "AI Safety Gate", status: "Active", color: "bg-primary" },
-                                    { label: "Inventory Audit", status: "Verified", color: "bg-emerald-500" },
-                                    { label: "Prescription Lock", status: "Enabled", color: "bg-amber-500" },
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-bold text-foreground">{item.label}</p>
-                                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{item.status}</p>
-                                        </div>
-                                        <div className={`w-3 h-3 rounded-full ${item.color} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="mt-12 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
-                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">AI Suggestion</p>
-                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                                    High demand detected for {topProduct.split(' ')[0]}. Automated restock scheduled for 04:00 AM.
+                {/* Urgent alerts */}
+                {!loading && urgent.length > 0 && (
+                    <div className="mb-4">
+                        <div className="alert alert-warning mb-4">
+                            <AlertTriangle className="alert-icon" style={{ color: 'var(--color-warning-600)' }} />
+                            <div className="alert-content">
+                                <h4 className="alert-title" style={{ color: 'var(--color-warning-900)' }}>
+                                    {urgent.length} urgent {urgent.length === 1 ? 'alert' : 'alerts'} — patients over 25 days without refill
+                                </h4>
+                                <p className="alert-body" style={{ color: 'var(--color-warning-700)' }}>
+                                    These patients may be at risk of missed doses.
                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
-            </main>
+                )}
 
-            <footer className="border-t border-border/40 py-12 px-8 mt-auto">
-                <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-                    <p>© 2026 RxGuardian Analysis Hub. Secure Encryption Layer active.</p>
+                {/* Alerts table */}
+                <div className="table-container">
+                    <div
+                        className="px-4 py-3 border-b flex items-center gap-2"
+                        style={{ borderColor: 'var(--color-neutral-200)', backgroundColor: 'var(--color-neutral-50)' }}
+                    >
+                        <Package className="w-4 h-4" style={{ color: 'var(--color-neutral-400)' }} />
+                        <h2 className="text-sm font-semibold" style={{ color: 'var(--color-neutral-700)' }}>
+                            All Refill Alerts
+                        </h2>
+                    </div>
+
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th className="table-header-cell">Patient ID</th>
+                                <th className="table-header-cell">Medication</th>
+                                <th className="table-header-cell">Last Order</th>
+                                <th className="table-header-cell text-center">Days Since</th>
+                                <th className="table-header-cell">Status</th>
+                                <th className="table-header-cell text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                [1, 2, 3, 4].map(i => (
+                                    <tr key={i} className="table-row">
+                                        {[1, 2, 3, 4, 5, 6].map(j => (
+                                            <td key={j} className="table-cell">
+                                                <div className="skeleton h-4 w-full" />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : alerts.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6}>
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <Bell className="w-8 h-8" style={{ color: 'var(--color-neutral-400)' }} />
+                                            </div>
+                                            <h3 className="empty-state-title">No refill alerts</h3>
+                                            <p className="empty-state-desc">
+                                                All patients are up to date with their medications.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                alerts.map((alert, idx) => {
+                                    const isUrgent = alert.days_since_last_order > 25;
+                                    return (
+                                        <tr key={idx} className="table-row">
+                                            <td className="table-cell font-medium" style={{ color: 'var(--color-neutral-900)' }}>
+                                                {alert.patient_id}
+                                            </td>
+                                            <td className="table-cell font-medium" style={{ color: 'var(--color-neutral-900)', fontSize: '0.9375rem' }}>
+                                                {alert.medication}
+                                            </td>
+                                            <td className="table-cell" style={{ color: 'var(--color-neutral-500)' }}>
+                                                {new Date(alert.last_order_date).toLocaleDateString()}
+                                            </td>
+                                            <td className="table-cell text-center">
+                                                <span
+                                                    className="inline-flex items-center justify-center w-12 h-7 rounded-full text-xs font-bold"
+                                                    style={isUrgent ? {
+                                                        backgroundColor: 'var(--color-warning-100)',
+                                                        color: 'var(--color-warning-800)',
+                                                    } : {
+                                                        backgroundColor: 'var(--color-neutral-100)',
+                                                        color: 'var(--color-neutral-700)',
+                                                    }}
+                                                >
+                                                    {alert.days_since_last_order}d
+                                                </span>
+                                            </td>
+                                            <td className="table-cell">
+                                                <span className={`badge ${isUrgent ? 'badge-warning' : 'badge-success'}`}>
+                                                    {isUrgent ? 'Urgent' : 'Monitor'}
+                                                </span>
+                                            </td>
+                                            <td className="table-cell text-right">
+                                                <button
+                                                    onClick={() => notify(alert.patient_id)}
+                                                    className="btn btn-outline btn-sm"
+                                                >
+                                                    <Bell className="w-3.5 h-3.5" />
+                                                    Notify
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            </footer>
+            </div>
         </div>
     );
 }

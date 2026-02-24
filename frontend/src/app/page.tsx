@@ -1,137 +1,192 @@
 "use client";
 
-import { Header } from "@/components/Header";
-import { ProductCard } from "@/components/ProductCard";
-import { Product } from "@/types";
-import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import ProductCard from '@/components/ProductCard';
+import ChatButton from '@/components/ChatButton';
+import { Pill, Clock, Shield, HeartPulse, Loader } from 'lucide-react';
 
-export default function Home() {
+interface Product {
+  id: string;
+  name: string;
+  pzn?: string;
+  price: number;
+  packageSize?: string;
+  description?: string;
+  stock: number;
+}
+
+export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*');
-
-        if (error) throw error;
-        setProducts(data || []);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProducts();
+    fetch('http://localhost:3001/api/products')
+      .then(r => r.json())
+      .then(d => { setProducts(d); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  const filteredProducts = products.filter(product => {
-    const name = product["product name"].toLowerCase();
-    const desc = (product["descriptions"] || "").toLowerCase();
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = !query || name.includes(query) || desc.includes(query);
-    const matchesCategory = activeCategory === "ALL" || name.includes(activeCategory.toLowerCase());
-    return matchesSearch && matchesCategory;
-  });
+  const filtered = products.filter(p =>
+    !search ||
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.description || '').toLowerCase().includes(search.toLowerCase())
+  );
 
-  const categories = ["ALL", "ASPIRIN", "IBUPROFEN", "PARACETAMOL"];
+  const features = [
+    { icon: <Clock className="w-6 h-6" style={{ color: 'var(--color-primary-500)' }} />, label: 'Fast Delivery', desc: 'Same-day dispatch on orders before 2 PM' },
+    { icon: <Shield className="w-6 h-6" style={{ color: 'var(--color-primary-500)' }} />, label: 'HIPAA Compliant', desc: 'Your health data is safe and private' },
+    { icon: <HeartPulse className="w-6 h-6" style={{ color: 'var(--color-primary-500)' }} />, label: 'AI Assistance', desc: 'Ask RxBot about any medication' },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20">
-      <Header />
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
 
-      <main className="flex-grow pt-32 pb-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Cinematic Hero Section */}
-          <section className="relative text-center mb-16 py-12">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-full bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      {/* ── Hero ── */}
+      <section
+        className="border-b"
+        style={{
+          backgroundColor: '#ffffff',
+          borderColor: 'var(--color-neutral-200)',
+        }}
+      >
+        <div className="page-wrapper py-12 md:py-16">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-4">
+              <Pill className="w-5 h-5" style={{ color: 'var(--color-primary-500)' }} />
+              <span
+                className="text-sm font-medium"
+                style={{ color: 'var(--color-primary-600)' }}
+              >
+                AI-Powered Pharmacy Assistant
+              </span>
+            </div>
 
-            <div className="relative z-10">
-              <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full mb-8">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-primary">System Online</span>
-              </div>
+            <h1
+              className="page-title mb-4"
+              style={{ fontSize: '2.25rem', lineHeight: '1.2' }}
+            >
+              Your medications, <br />
+              <span style={{ color: 'var(--color-primary-600)' }}>delivered with care</span>
+            </h1>
 
-              <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground mb-8 text-balance">
-                Next-Gen <span className="text-primary italic">Pharmacy</span> <br />
-                Guarded by AI.
-              </h1>
+            <p
+              className="text-lg mb-8"
+              style={{ color: 'var(--color-neutral-600)', maxWidth: '36rem' }}
+            >
+              Order prescriptions and over‑the‑counter medicines. Ask our
+              AI assistant for guidance on dosage, interactions, and refills.
+            </p>
 
-              <div className="max-w-xl mx-auto relative group">
-                <input
-                  type="text"
-                  placeholder="Search medications, descriptions, PZN..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setActiveCategory("ALL"); }}
-                  className="w-full bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-border/50 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50 group-focus-within:opacity-100 transition-opacity">
-                  ⌘ K
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/chat"
+                className="btn btn-primary btn-lg"
+              >
+                Chat with RxBot
+              </a>
+              <a
+                href="#catalog"
+                className="btn btn-secondary btn-lg"
+                onClick={e => { e.preventDefault(); document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' }); }}
+              >
+                Browse Medications
+              </a>
+            </div>
+          </div>
+
+          {/* Feature cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12">
+            {features.map(f => (
+              <div
+                key={f.label}
+                className="flex items-start gap-3 p-4 rounded-lg"
+                style={{
+                  backgroundColor: 'var(--color-primary-50)',
+                  border: '1px solid var(--color-primary-100)',
+                }}
+              >
+                <div className="flex-shrink-0 mt-0.5">{f.icon}</div>
+                <div>
+                  <p className="font-semibold text-sm" style={{ color: 'var(--color-neutral-900)' }}>{f.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-neutral-600)' }}>{f.desc}</p>
                 </div>
               </div>
-            </div>
-          </section>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Filtering & Grid */}
-          <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <h2 className="text-2xl font-bold text-foreground">Available Catalog</h2>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-xl transition-all border ${activeCategory === cat ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-muted text-muted-foreground border-border/50 hover:border-primary/50'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+      {/* ── Catalog ── */}
+      <section id="catalog" className="page-wrapper py-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h2
+              className="text-2xl font-bold"
+              style={{ color: 'var(--color-neutral-900)' }}
+            >
+              Medication Catalog
+            </h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-neutral-500)' }}>
+              {loading ? 'Loading…' : `${filtered.length} ${filtered.length === 1 ? 'item' : 'items'} available`}
+            </p>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="glass-card animate-pulse h-[400px] border border-border/20 rounded-[2rem]" />
-              ))}
+          <div className="relative w-full sm:w-72">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <svg className="w-4 h-4" style={{ color: 'var(--color-neutral-400)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-32 glass rounded-[2rem] border-dashed border-2 border-border/50">
-              <div className="text-5xl mb-6 opacity-40">📡</div>
-              <h2 className="text-2xl font-bold text-foreground">No Results Found</h2>
-              <p className="text-muted-foreground mt-2 max-w-xs mx-auto">
-                No medications matched your current criteria or search query.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <Link key={product["product id"]} href={`/product/${product["product id"]}`}>
-                  <ProductCard product={product} />
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-
-      <footer className="border-t border-border/40 py-12 px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-muted-foreground">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-foreground">RxGuardian</span>
-            <span>OS v1.0.4</span>
+            <input
+              type="search"
+              placeholder="Search medications…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="input pl-9"
+            />
           </div>
-          <p>© 2026 RxGuardian Technologies. Secured by DeepMind AI.</p>
         </div>
-      </footer>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="card animate-pulse" style={{ padding: '1.25rem' }}>
+                <div className="skeleton h-4 w-3/4 mb-3" />
+                <div className="skeleton h-3 w-1/2 mb-6" />
+                <div className="skeleton h-8 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg className="w-8 h-8" style={{ color: 'var(--color-neutral-400)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="empty-state-title">No results found</h3>
+            <p className="empty-state-desc">
+              We couldn&apos;t find any medications matching &ldquo;{search}&rdquo;. Try a different name or ingredient.
+            </p>
+            <button
+              className="btn btn-secondary btn-md"
+              onClick={() => setSearch('')}
+            >
+              Clear search
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filtered.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Fixed AI chat button */}
+      <ChatButton />
     </div>
   );
 }
