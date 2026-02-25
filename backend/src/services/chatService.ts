@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // ─── Chat log persistence ─────────────────────────────────────────────────────
 const LOG_FILE = path.join(__dirname, '../../data/chat_logs.json');
@@ -38,17 +38,24 @@ export const getSmartLogs = (): any[] => {
     }
 };
 
-// ─── Gemini setup ─────────────────────────────────────────────────────────────
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey || apiKey === 'YOUR_GEMINI_KEY_HERE') {
-    console.warn('⚠️  GEMINI_API_KEY not set. Chat will return a helpful error message.');
-}
+// ─── Gemini lazy initialization ───────────────────────────────────────────────
+let genAI: GoogleGenerativeAI | null = null;
+let generativeModel: any = null;
 
-const genAI = new GoogleGenerativeAI(apiKey || 'MISSING_KEY');
-const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    tools: [{ functionDeclarations: [placeOrderTool] }],
-});
+const getModel = () => {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key || key === 'YOUR_GEMINI_KEY_HERE') return null;
+
+    if (!generativeModel) {
+        console.log(`[Gemini] Initializing model with key length: ${key.length}`);
+        genAI = new GoogleGenerativeAI(key);
+        generativeModel = genAI.getGenerativeModel({
+            model: 'gemini-flash-latest',
+            tools: [{ functionDeclarations: [placeOrderTool] }],
+        });
+    }
+    return generativeModel;
+};
 
 // ─── Context type ─────────────────────────────────────────────────────────────
 interface ChatContext {
@@ -62,8 +69,12 @@ export const processUserQuery = async (
     userMessage: string,
     context: ChatContext
 ): Promise<string> => {
+    const model = getModel();
+
     // No API key — return a friendly fallback
-    if (!apiKey || apiKey === 'YOUR_GEMINI_KEY_HERE') {
+    if (!model) {
+        const key = process.env.GEMINI_API_KEY;
+        console.warn(`[ChatService] Offline: apiKey=${key ? 'HIDDEN(' + key.length + ')' : 'MISSING'}`);
         return `🤖 AI Assistant is offline (GEMINI_API_KEY not configured). However, I can tell you that we have ${context.products.length} products in stock. Please ask a pharmacist for help.`;
     }
 
@@ -107,7 +118,7 @@ Instructions:
 - Help with: checking stock, product info, pricing, ordering, refill reminders.
 - If the user explicitly asks to ORDER or BUY something, call the placeOrder tool.
 - Ask for confirmation before placing an order if quantity is ambiguous.
-- Prices are in EUR (€). 
+- Prices are in INR (₹). 
 - Do NOT make up product names not in the provided list.
 - If a product isn't in the list, say you don't carry it currently.
     `.trim();
@@ -137,7 +148,7 @@ Instructions:
                 const args = call.args as { productName: string; quantity: number; patientId?: string };
 
                 // Validate product exists
-                const product = getProductByName(args.productName);
+                const product = await getProductByName(args.productName);
                 if (!product) {
                     const text = `I couldn't find "${args.productName}" in our catalog. Please check the exact product name.`;
                     logInteraction(userMessage, text);
@@ -145,14 +156,14 @@ Instructions:
                 }
 
                 // Validate stock
-                if (!checkStock(args.productName, args.quantity)) {
+                if (!(await checkStock(args.productName, args.quantity))) {
                     const text = `Sorry, we only have ${product.stock} unit(s) of ${product.name} in stock — not enough for ${args.quantity}.`;
                     logInteraction(userMessage, text);
                     return text;
                 }
 
                 // Place order
-                decrementStock(args.productName, args.quantity);
+                await decrementStock(args.productName, args.quantity);
                 const newOrder = await addOrder({
                     id: `ORD-${Date.now()}`,
                     'Patient ID': args.patientId || context.patientId || 'GUEST-001',

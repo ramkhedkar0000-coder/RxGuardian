@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Bell, AlertTriangle, CheckCircle, Package } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
 
 interface RefillAlert {
     patient_id: string;
@@ -16,7 +17,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/refill-alerts')
+        fetch(`${getApiUrl()}/api/refill-alerts`)
             .then(r => r.json())
             .then(d => { setAlerts(d); setLoading(false); })
             .catch(() => setLoading(false));

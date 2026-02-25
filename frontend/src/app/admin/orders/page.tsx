@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Package, CheckCircle, Clock, Users, Search } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
 
 interface Order {
     id?: string;
@@ -20,7 +21,7 @@ export default function AdminOrdersPage() {
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/orders')
+        fetch(`${getApiUrl()}/api/orders`)
             .then(r => r.json())
             .then(d => { setOrders(d); setLoading(false); })
             .catch(() => setLoading(false));

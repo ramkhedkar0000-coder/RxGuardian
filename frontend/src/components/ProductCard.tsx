@@ -1,124 +1,161 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Package } from 'lucide-react';
+import { ShoppingCart, Package, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { Product } from '@/types';
+import { useState } from 'react';
 
-// Normalised product shape from new productService
-interface Product {
-    id: string;
-    name: string;
-    pzn?: string;
-    price: number;
-    packageSize?: string;
-    description?: string;
-    stock: number;
-}
+const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+// Fixed line-clamp height helpers for equal card heights
+const clamp2: React.CSSProperties = {
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+};
 
 export default function ProductCard({ product }: { product: Product }) {
     const { addItem } = useCart();
     const { addToast } = useToast();
+    const [added, setAdded] = useState(false);
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.preventDefault();
-        e.stopPropagation(); // Prevent navigating to product details when clicking add to cart
+        e.stopPropagation();
+        if (stockStatus === 'out') return;
         addItem(product);
         addToast({
             type: 'success',
-            message: 'Added to Cart',
-            description: `${product.name} has been added to your cart.`,
+            message: `Added to cart`,
+            description: `${product.name} · ${INR.format(product.price)}`,
             duration: 2500,
         });
+        setAdded(true);
+        setTimeout(() => setAdded(false), 1800);
     };
 
     const stockStatus =
         product.stock === 0 ? 'out' :
-            product.stock < 15 ? 'low' : 'ok';
+            product.stock < 10 ? 'low' : 'ok';
 
     return (
         <Link
             href={`/product/${product.id}`}
-            className="card card-hover flex flex-col gap-3 group"
-            style={{ padding: '1.25rem', textDecoration: 'none' }}
+            className="card card-hover flex flex-col group"
+            style={{ padding: '1rem', textDecoration: 'none' }}
         >
-            {/* Product icon placeholder */}
-            <div
-                className="flex items-center justify-center w-10 h-10 rounded-lg mb-1 group-hover:scale-110 transition-transform duration-300"
-                style={{ backgroundColor: 'var(--color-primary-50)' }}
-            >
-                <Package className="w-5 h-5" style={{ color: 'var(--color-primary-600)' }} />
+            {/* Row 1: icon + stock badge */}
+            <div className="flex items-start justify-between mb-2.5">
+                <div
+                    className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+                    style={{ background: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)' }}
+                >
+                    <Package style={{ width: '1rem', height: '1rem', color: '#0d9488' }} />
+                </div>
+
+                <div className="flex-shrink-0 ml-2 pt-0.5">
+                    {stockStatus === 'out' && (
+                        <span className="badge badge-error">Out of Stock</span>
+                    )}
+                    {stockStatus === 'low' && (
+                        <span className="badge badge-warning">{product.stock} left</span>
+                    )}
+                    {stockStatus === 'ok' && (
+                        <span className="flex items-center gap-1" style={{ fontSize: '0.7rem', fontWeight: 600, color: '#16a34a' }}>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+                            In Stock
+                        </span>
+                    )}
+                </div>
             </div>
 
-            {/* Name */}
+            {/* Row 2: Name — FIXED 2-line height always */}
             <h3
-                className="font-semibold leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors"
-                style={{ fontSize: '0.9375rem', color: 'var(--color-neutral-900)' }}
                 title={product.name}
+                style={{
+                    ...clamp2,
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    lineHeight: '1.4',
+                    minHeight: '2.38rem', // exactly 2 lines at 0.85rem × 1.4
+                    marginBottom: '0.375rem',
+                    transition: 'color 0.15s',
+                }}
+                className="group-hover:text-teal-600"
             >
                 {product.name}
             </h3>
 
-            {/* Description */}
-            {product.description && (
-                <p
-                    className="text-xs line-clamp-2"
-                    style={{ color: 'var(--color-neutral-500)' }}
-                >
-                    {product.description}
-                </p>
-            )}
+            {/* Row 3: Description — FIXED 2-line height always */}
+            <p
+                style={{
+                    ...clamp2,
+                    fontSize: '0.775rem',
+                    color: '#64748b',
+                    lineHeight: '1.5',
+                    minHeight: '2.325rem', // exactly 2 lines
+                    marginBottom: '0.5rem',
+                }}
+            >
+                {product.description || '\u00a0'}
+            </p>
 
-            {/* Meta badges row */}
-            <div className="flex flex-wrap gap-1.5">
+            {/* Row 4: Meta — single line, no wrap */}
+            <div
+                className="flex items-center gap-1.5 overflow-hidden"
+                style={{ minHeight: '1.375rem', marginBottom: '0.5rem', flexWrap: 'nowrap' }}
+            >
                 {product.packageSize && (
-                    <span className="badge badge-neutral">{product.packageSize}</span>
+                    <span className="badge badge-neutral flex-shrink-0" style={{ fontSize: '0.68rem' }}>
+                        {product.packageSize}
+                    </span>
                 )}
                 {product.pzn && (
                     <span
-                        className="text-xs font-mono"
-                        style={{ color: 'var(--color-neutral-400)' }}
-                        title="Pharmazentralnummer"
+                        className="badge badge-neutral font-mono flex-shrink-0"
+                        style={{ fontSize: '0.65rem', maxWidth: '8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
-                        PZN: {product.pzn}
+                        PZN·{product.pzn}
                     </span>
                 )}
             </div>
 
-            {/* Stock badge */}
-            <div className="flex items-center gap-2">
-                {stockStatus === 'out' && (
-                    <span className="badge badge-error">Out of Stock</span>
-                )}
-                {stockStatus === 'low' && (
-                    <span className="badge badge-warning">Low Stock · {product.stock} left</span>
-                )}
-                {stockStatus === 'ok' && (
-                    <span className="badge badge-success">In Stock</span>
-                )}
-            </div>
+            {/* Spacer — pushes price to bottom */}
+            <div style={{ flex: 1 }} />
 
-            {/* Spacer */}
-            <div className="flex-grow" />
-
-            {/* Price + CTA */}
-            <div className="flex items-center justify-between mt-auto pt-3"
-                style={{ borderTop: '1px solid var(--color-neutral-100)' }}>
-                <span
-                    className="text-lg font-bold"
-                    style={{ color: 'var(--color-neutral-900)' }}
-                >
-                    {product.price > 0 ? `€${product.price.toFixed(2)}` : 'Free'}
+            {/* Row 5: Price + CTA — always at bottom */}
+            <div
+                className="flex items-center justify-between"
+                style={{ paddingTop: '0.625rem', borderTop: '1px solid #f1f5f9' }}
+            >
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                    {product.price > 0
+                        ? INR.format(product.price)
+                        : <span style={{ color: '#16a34a' }}>Free</span>
+                    }
                 </span>
 
                 <button
                     onClick={handleAddToCart}
                     disabled={stockStatus === 'out'}
-                    className="btn btn-primary btn-sm"
+                    className={`btn btn-sm flex-shrink-0 ${!added && stockStatus !== 'out' ? 'btn-primary' : ''}`}
+                    style={
+                        added
+                            ? { background: '#16a34a', color: '#fff' }
+                            : stockStatus === 'out'
+                                ? { background: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' }
+                                : undefined
+                    }
                     aria-label={`Add ${product.name} to cart`}
                 >
-                    <ShoppingCart className="w-4 h-4" aria-hidden />
-                    Add to cart
+                    {added
+                        ? <><CheckCircle style={{ width: '0.8rem', height: '0.8rem' }} /> Added!</>
+                        : <><ShoppingCart style={{ width: '0.8rem', height: '0.8rem' }} /> Add</>
+                    }
                 </button>
             </div>
         </Link>

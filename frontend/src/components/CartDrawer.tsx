@@ -1,162 +1,205 @@
 "use client";
 
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Package, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { getApiUrl } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { X, ShoppingCart, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export function CartDrawer({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+interface CartDrawerProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const { state, removeItem, updateQuantity, clearCart, totalPrice, totalItems } = useCart();
+    const items = state.items;
     const { addToast } = useToast();
-    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [checking, setChecking] = useState(false);
+    const drawerRef = useRef<HTMLDivElement>(null);
 
-    // Prevent scrolling on body when drawer is open
+    /* close on Escape */
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [onClose]);
+
+    /* lock body scroll when open */
+    useEffect(() => {
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
     const handleCheckout = async () => {
-        if (state.items.length === 0) return;
-        setIsCheckingOut(true);
-
+        if (items.length === 0) return;
+        setChecking(true);
         try {
-            // Group items into a single checkout payload if the backend supported it,
-            // but for MVP we loop and send individual orders just like before.
-            const checkoutPromises = state.items.map(item =>
-                fetch('http://localhost:3001/api/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        productName: item.product.name,
-                        quantity: item.quantity,
-                        price: item.product.price,
-                        patientId: 'GUEST-001',
-                    }),
-                })
-            );
-
-            await Promise.all(checkoutPromises);
-
+            const res = await fetch(`${getApiUrl()}/api/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: items.map((i: { product: { id: string }; quantity: number }) => ({ productId: i.product.id, quantity: i.quantity })),
+                    totalAmount: totalPrice,
+                }),
+            });
+            if (!res.ok) throw new Error('Order failed');
             clearCart();
             onClose();
             addToast({
                 type: 'success',
-                message: 'Order Placed Successfully!',
-                description: `Successfully processed ${totalItems} items for €${totalPrice.toFixed(2)}.`,
-                duration: 5000
+                message: 'Order Placed!',
+                description: `Your order of ${INR.format(totalPrice)} has been placed successfully.`,
+                duration: 5000,
             });
-        } catch (error) {
-            console.error(error);
+        } catch {
             addToast({
                 type: 'error',
                 message: 'Checkout Failed',
-                description: 'We encountered an error processing your checkout. Please try again.',
+                description: 'Could not place order. Please try again.',
+                duration: 4000,
             });
         } finally {
-            setIsCheckingOut(false);
+            setChecking(false);
         }
     };
 
+    const savings = Math.round(totalPrice * 0.18); // simulated 18% GST saving display
+
     return (
-        <>
+        <div aria-modal="true" role="dialog" aria-label="Shopping Cart">
             {/* Backdrop */}
             <div
-                className={`fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className="fixed inset-0 transition-opacity duration-300"
+                style={{
+                    backgroundColor: 'rgba(15,23,42,0.5)',
+                    backdropFilter: 'blur(4px)',
+                    zIndex: 49,
+                    opacity: isOpen ? 1 : 0,
+                    pointerEvents: isOpen ? 'auto' : 'none',
+                }}
                 onClick={onClose}
             />
 
             {/* Drawer */}
             <div
-                className={`fixed inset-y-0 right-0 z-[110] w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl transition-transform duration-300 ease-in-out transform flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                ref={drawerRef}
+                className="fixed right-0 top-0 h-full flex flex-col"
+                style={{
+                    width: 'min(420px, 100vw)',
+                    zIndex: 50,
+                    background: '#ffffff',
+                    boxShadow: '-8px 0 40px rgba(0,0,0,0.15)',
+                    transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+                    transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
+                }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-xl">
-                            <ShoppingCart className="w-5 h-5 text-primary" />
+                <div
+                    className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                    style={{ borderBottom: '1px solid #f1f5f9' }}
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #0d9488, #4f46e5)' }}
+                        >
+                            <ShoppingBag className="text-white" style={{ width: '1rem', height: '1rem' }} />
                         </div>
-                        <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                            Your Cart
-                        </h2>
-                        {totalItems > 0 && (
-                            <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full">
-                                {totalItems}
-                            </span>
-                        )}
+                        <div>
+                            <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Your Cart</h2>
+                            <p className="text-xs" style={{ color: '#94a3b8' }}>{totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
+                        </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                        style={{ color: '#64748b' }}
+                        aria-label="Close cart"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    {state.items.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-                            <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
-                            <h3 className="text-lg font-bold text-foreground">Your cart is empty</h3>
-                            <p className="text-sm text-muted-foreground max-w-[250px]">
-                                Browse our catalog and add medications to proceed with your order.
-                            </p>
-                            <button onClick={onClose} className="btn btn-outline btn-sm mt-4">
-                                Browse Catalog
+                {/* Items */}
+                <div className="flex-1 overflow-y-auto py-4 px-5">
+                    {items.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                            <div
+                                className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
+                                style={{ background: '#f0fdfa' }}
+                            >
+                                <ShoppingBag style={{ width: '2.25rem', height: '2.25rem', color: '#0d9488' }} />
+                            </div>
+                            <p className="font-bold text-lg" style={{ color: '#0f172a' }}>Your cart is empty</p>
+                            <p className="text-sm mt-1" style={{ color: '#64748b' }}>Browse our catalog and add medicines</p>
+                            <button onClick={onClose} className="btn btn-primary btn-sm mt-6">
+                                Browse Medicines
                             </button>
                         </div>
                     ) : (
-                        <div className="space-y-6">
-                            {state.items.map((item) => (
-                                <div key={item.product.id} className="flex gap-4 group">
-                                    <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center flex-shrink-0 border border-border/50">
-                                        <span className="text-2xl">💊</span>
+                        <div className="space-y-3">
+                            {items.map(item => (
+                                <div
+                                    key={item.product.id}
+                                    className="flex gap-3 rounded-xl p-3 transition-colors"
+                                    style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}
+                                >
+                                    {/* Icon */}
+                                    <div
+                                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)' }}
+                                    >
+                                        <Package className="w-5 h-5" style={{ color: '#0d9488' }} />
                                     </div>
-                                    <div className="flex-1 flex flex-col">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-semibold text-foreground line-clamp-2 text-sm">
-                                                {item.product.name}
-                                            </h3>
-                                            <p className="font-bold text-foreground text-sm ml-4">
-                                                €{(item.product.price * item.quantity).toFixed(2)}
-                                            </p>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            €{item.product.price.toFixed(2)} each
-                                        </p>
 
-                                        <div className="flex items-center justify-between mt-auto pt-2">
-                                            <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-1 border border-border/50">
-                                                <button
-                                                    onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                                                    className="p-1 hover:bg-white dark:hover:bg-slate-800 rounded-md transition-shadow text-muted-foreground hover:text-foreground shadow-sm"
-                                                >
-                                                    <Minus className="w-3.5 h-3.5" />
-                                                </button>
-                                                <span className="text-sm font-semibold w-4 text-center">
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                    className="p-1 hover:bg-white dark:hover:bg-slate-800 rounded-md transition-shadow text-muted-foreground hover:text-foreground shadow-sm"
-                                                >
-                                                    <Plus className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm leading-snug truncate" style={{ color: '#0f172a' }}>
+                                            {item.product.name}
+                                        </p>
+                                        <p className="text-xs mt-0.5 font-bold" style={{ color: '#0d9488' }}>
+                                            {INR.format(item.product.price)} each
+                                        </p>
+                                        {/* Qty controls */}
+                                        <div className="flex items-center gap-2 mt-2">
                                             <button
-                                                onClick={() => removeItem(item.product.id)}
-                                                className="p-2 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                className="w-6 h-6 rounded-md flex items-center justify-center border transition-colors hover:bg-white"
+                                                style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+                                                aria-label="Decrease"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Minus className="w-3 h-3" />
+                                            </button>
+                                            <span className="w-7 text-center text-sm font-bold" style={{ color: '#0f172a' }}>
+                                                {item.quantity}
+                                            </span>
+                                            <button
+                                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                                className="w-6 h-6 rounded-md flex items-center justify-center border transition-colors hover:bg-white"
+                                                style={{ borderColor: '#e2e8f0', color: '#64748b' }}
+                                                aria-label="Increase"
+                                            >
+                                                <Plus className="w-3 h-3" />
                                             </button>
                                         </div>
+                                    </div>
+
+                                    {/* Sub-total + delete */}
+                                    <div className="flex flex-col items-end justify-between flex-shrink-0">
+                                        <span className="font-black text-sm" style={{ color: '#0f172a' }}>
+                                            {INR.format(item.product.price * item.quantity)}
+                                        </span>
+                                        <button
+                                            onClick={() => removeItem(item.product.id)}
+                                            className="p-1 rounded-lg hover:bg-red-50 transition-colors"
+                                            style={{ color: '#94a3b8' }}
+                                            aria-label="Remove"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5 hover:text-red-500" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -165,48 +208,68 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean, onClose: () =
                 </div>
 
                 {/* Footer */}
-                {state.items.length > 0 && (
-                    <div className="p-6 border-t border-border bg-muted/20">
-                        <div className="space-y-3 mb-6">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Subtotal</span>
-                                <span className="font-semibold">€{totalPrice.toFixed(2)}</span>
+                {items.length > 0 && (
+                    <div
+                        className="px-5 py-4 flex-shrink-0 space-y-3"
+                        style={{ borderTop: '1px solid #f1f5f9' }}
+                    >
+                        {/* Price summary */}
+                        <div className="rounded-xl p-4 space-y-2" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                            <div className="flex items-center justify-between text-sm">
+                                <span style={{ color: '#64748b' }}>Subtotal ({totalItems} items)</span>
+                                <span className="font-semibold" style={{ color: '#0f172a' }}>{INR.format(totalPrice)}</span>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Shipping</span>
-                                <span className="text-emerald-500 font-medium">Free Express</span>
+                            <div className="flex items-center justify-between text-sm">
+                                <span style={{ color: '#64748b' }}>Delivery</span>
+                                <span className="font-semibold" style={{ color: '#16a34a' }}>FREE</span>
                             </div>
-                            <div className="border-t border-border pt-3 flex justify-between items-center">
-                                <span className="font-bold text-foreground">Total</span>
-                                <span className="text-2xl font-black text-primary">€{totalPrice.toFixed(2)}</span>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-semibold" style={{ color: '#0f172a' }}>You save</span>
+                                <span className="font-semibold" style={{ color: '#0d9488' }}>~{INR.format(savings)}</span>
                             </div>
+                            <div
+                                className="flex items-center justify-between pt-2 mt-1"
+                                style={{ borderTop: '1px dashed #e2e8f0' }}
+                            >
+                                <span className="font-bold text-base" style={{ color: '#0f172a' }}>Total Payable</span>
+                                <span className="font-black text-lg" style={{ color: '#0d9488' }}>{INR.format(totalPrice)}</span>
+                            </div>
+                        </div>
+
+                        {/* Trust */}
+                        <div className="flex items-center justify-center gap-1.5 text-xs" style={{ color: '#64748b' }}>
+                            <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#0d9488' }} />
+                            Secure checkout · HIPAA compliant
                         </div>
 
                         <button
                             onClick={handleCheckout}
-                            disabled={isCheckingOut}
-                            className="w-full btn btn-primary btn-lg shadow-primary/25 relative overflow-hidden group"
+                            disabled={checking}
+                            className="btn btn-primary btn-lg w-full"
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                            {isCheckingOut ? (
+                            {checking ? (
                                 <span className="flex items-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Processing Securely...
+                                    <span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    Placing Order…
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-2 relative z-10">
-                                    Secure Checkout
-                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <span className="flex items-center gap-2">
+                                    Place Order · {INR.format(totalPrice)}
+                                    <ArrowRight className="w-4 h-4" />
                                 </span>
                             )}
                         </button>
-                        <p className="text-[10px] text-center text-muted-foreground mt-4 uppercase tracking-widest font-bold flex items-center justify-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            HIPAA Compliant Processing
-                        </p>
+
+                        <button
+                            onClick={() => { clearCart(); }}
+                            className="btn btn-ghost btn-sm w-full text-xs"
+                            style={{ color: '#94a3b8' }}
+                        >
+                            Clear cart
+                        </button>
                     </div>
                 )}
             </div>
-        </>
+        </div>
     );
 }

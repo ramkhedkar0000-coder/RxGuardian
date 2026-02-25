@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { Package, CheckCircle, Clock, CreditCard } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
+import { Header } from '@/components/Header';
 
 interface Order {
     id?: string;
@@ -14,15 +18,22 @@ interface Order {
 }
 
 export default function OrdersPage() {
+    const { user, isLoading: authLoading } = useAuth();
+    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/orders')
+        if (!authLoading && !user) router.push('/login');
+    }, [user, authLoading, router]);
+
+    useEffect(() => {
+        if (!user) return;
+        fetch(`${getApiUrl()}/api/orders`)
             .then(r => r.json())
             .then(d => { setOrders(d); setLoading(false); })
             .catch(() => setLoading(false));
-    }, []);
+    }, [user]);
 
     const formatDate = (order: Order) => {
         if (order._purchaseDateISO) return new Date(order._purchaseDateISO).toLocaleDateString();
@@ -38,6 +49,17 @@ export default function OrdersPage() {
         if (sl === 'processing') return 'badge-info';
         return 'badge-neutral';
     };
+
+    if (authLoading || !user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-t-teal-600 border-gray-200 rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium">Verifying access...</p>
+                </div>
+            </div>
+        );
+    }
 
     const totalSpend = orders.reduce((sum, o) => sum + (o["Total Price (EUR)"] || 0), 0);
     const completed = orders.filter(o => (o.status || '').toLowerCase() === 'completed').length;
@@ -57,16 +79,17 @@ export default function OrdersPage() {
         },
         {
             label: 'Total Spend',
-            value: loading ? '—' : `€${totalSpend.toFixed(2)}`,
+            value: loading ? '—' : `₹${totalSpend.toFixed(2)}`,
             icon: <CreditCard className="w-6 h-6" style={{ color: 'var(--color-warning-600)' }} />,
             accent: 'stat-accent-amber',
         },
     ];
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
-            <div className="page-wrapper py-8">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-neutral-50)' }}>
+            <Header />
 
+            <div className="page-wrapper py-8 flex-1">
                 <div className="mb-6">
                     <h1 className="page-title">My Orders</h1>
                     <p className="page-subtitle">Your complete medication order history</p>
@@ -127,7 +150,7 @@ export default function OrdersPage() {
                                             <p className="empty-state-desc">
                                                 When you place an order, it will appear here.
                                             </p>
-                                            <a href="/" className="btn btn-primary btn-md">
+                                            <a href="/browse" className="btn btn-primary btn-md">
                                                 Browse Medications
                                             </a>
                                         </div>
@@ -135,7 +158,7 @@ export default function OrdersPage() {
                                 </tr>
                             ) : (
                                 orders.map((order, idx) => (
-                                    <tr key={idx} className="table-row">
+                                    <tr key={order.id ?? idx} className="table-row">
                                         <td className="table-cell" style={{ color: 'var(--color-neutral-500)' }}>
                                             {formatDate(order)}
                                         </td>
@@ -144,7 +167,7 @@ export default function OrdersPage() {
                                         </td>
                                         <td className="table-cell text-center">{order["Quantity"]}</td>
                                         <td className="table-cell text-right font-semibold" style={{ color: 'var(--color-neutral-900)' }}>
-                                            €{(order["Total Price (EUR)"] || 0).toFixed(2)}
+                                            ₹{(order["Total Price (EUR)"] || 0).toFixed(2)}
                                         </td>
                                         <td className="table-cell text-center">
                                             <span className={`badge ${getStatusBadge(order.status || '')}`}>

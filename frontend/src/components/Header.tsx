@@ -4,149 +4,156 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { Pill, Bell, LogOut, Package, LayoutDashboard, Bot, ShoppingCart } from 'lucide-react';
+import { Pill, LogOut, Package, LayoutDashboard, Bot, ShoppingCart } from 'lucide-react';
 import { CartDrawer } from './CartDrawer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Header() {
     const { user, logout } = useAuth();
     const { totalItems } = useCart();
     const pathname = usePathname();
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 8);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    const isActive = (href: string) =>
+        pathname === href || (href !== '/' && pathname.startsWith(href));
 
     const patientLinks = [
-        { href: '/', label: 'Medications', icon: <Pill className="w-4 h-4" /> },
-        { href: '/orders', label: 'My Orders', icon: <Package className="w-4 h-4" /> },
-        { href: '/chat', label: 'AI Assistant', icon: <Bot className="w-4 h-4" /> },
+        { href: '/browse', label: 'Medicines', icon: Pill },
+        { href: '/orders', label: 'My Orders', icon: Package },
+        { href: '/chat', label: 'AI Assistant', icon: Bot },
     ];
-
     const adminLinks = [
-        { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-        { href: '/admin/orders', label: 'Orders', icon: <Package className="w-4 h-4" /> },
-        { href: '/admin/inventory', label: 'Inventory', icon: <Pill className="w-4 h-4" /> },
-        { href: '/admin/logs', label: 'AI Logs', icon: <Bot className="w-4 h-4" /> },
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/orders', label: 'Orders', icon: Package },
+        { href: '/admin/inventory', label: 'Inventory', icon: Pill },
+        { href: '/admin/logs', label: 'AI Logs', icon: Bot },
     ];
 
     const links = user?.role === 'admin' ? adminLinks : patientLinks;
+
     const initials = user?.name
         ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
         : 'U';
 
+    // Cart is shown only for patients, not admins
+    const showCart = user?.role !== 'admin';
+
     return (
-        <header className="site-header">
-            <div className="page-wrapper">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 group no-underline">
-                        <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: 'var(--color-primary-500)' }}
-                        >
-                            <Pill className="w-4 h-4 text-white" />
-                        </div>
-                        <span
-                            className="text-lg font-bold"
-                            style={{ color: 'var(--color-neutral-900)' }}
-                        >
-                            RXGuardians
-                        </span>
-                    </Link>
+        <>
+            <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
+                <div className="page-wrapper">
+                    <div className="flex items-center justify-between h-16">
 
-                    {/* Desktop Navigation */}
-                    {user && (
-                        <nav className="hidden md:flex items-center gap-1">
-                            {links.map(link => (
-                                <Link
-                                    key={link.href}
-                                    href={link.href}
-                                    className={`nav-link flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors duration-150 ${isActive(link.href) ? 'nav-link-active bg-blue-50' : 'hover:bg-neutral-100'
-                                        }`}
-                                    style={{
-                                        color: isActive(link.href)
-                                            ? 'var(--color-primary-600)'
-                                            : 'var(--color-neutral-700)',
-                                        fontWeight: isActive(link.href) ? 600 : 500,
-                                        fontSize: '0.875rem',
-                                    }}
-                                >
-                                    {link.icon}
-                                    {link.label}
-                                </Link>
-                            ))}
-                        </nav>
-                    )}
-
-                    {/* Right Actions */}
-                    <div className="flex items-center gap-2">
-                        {user ? (
-                            <>
-                                {/* Role badge */}
-                                <span
-                                    className={`badge hidden sm:inline-flex ${user.role === 'admin' ? 'badge-warning' : 'badge-info'
-                                        }`}
-                                >
-                                    {user.role === 'admin' ? 'Admin' : 'Patient'}
-                                </span>
-
-                                {/* Avatar */}
-                                <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
-                                    style={{
-                                        backgroundColor: 'var(--color-primary-100)',
-                                        color: 'var(--color-primary-700)',
-                                    }}
-                                    title={user.name || 'User'}
-                                >
-                                    {initials}
-                                </div>
-
-                                {/* Logout */}
-                                <button
-                                    onClick={logout}
-                                    className="p-2 rounded-lg transition-colors duration-150"
-                                    style={{ color: 'var(--color-neutral-500)' }}
-                                    onMouseEnter={e => {
-                                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-neutral-100)';
-                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-neutral-700)';
-                                    }}
-                                    onMouseLeave={e => {
-                                        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-neutral-500)';
-                                    }}
-                                    aria-label="Log out"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                </button>
-                            </>
-                        ) : (
-                            <Link
-                                href="/login"
-                                className="btn btn-primary btn-sm hidden sm:inline-flex"
+                        {/* Logo */}
+                        <Link href="/" className="flex items-center gap-2.5 group no-underline flex-shrink-0">
+                            <div
+                                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200"
+                                style={{ background: 'linear-gradient(135deg, #0d9488, #4f46e5)' }}
                             >
-                                Sign in
-                            </Link>
+                                <Pill className="text-white" style={{ width: '1rem', height: '1rem' }} />
+                            </div>
+                            <div className="leading-none">
+                                <span
+                                    className="font-black text-lg tracking-tight block"
+                                    style={{ color: '#0f172a', letterSpacing: '-0.03em' }}
+                                >
+                                    Rx<span style={{ color: '#0d9488' }}>Guardian</span>
+                                </span>
+                                <span className="text-[10px] font-medium" style={{ color: '#94a3b8' }}>
+                                    India&apos;s Trusted Pharmacy
+                                </span>
+                            </div>
+                        </Link>
+
+                        {/* Nav */}
+                        {user && (
+                            <nav className="hidden md:flex items-center gap-0.5">
+                                {links.map(({ href, label, icon: Icon }) => (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        className={`nav-link ${isActive(href) ? 'nav-link-active' : ''}`}
+                                    >
+                                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                                        {label}
+                                    </Link>
+                                ))}
+                            </nav>
                         )}
 
-                        <button
-                            onClick={() => setIsCartOpen(true)}
-                            className="relative p-2 rounded-lg text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 transition-colors duration-150"
-                            aria-label="Open Cart"
-                        >
-                            <ShoppingCart className="w-5 h-5 text-primary-600" />
-                            {totalItems > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                                    {totalItems}
-                                </span>
+                        {/* Right side */}
+                        <div className="flex items-center gap-1.5">
+                            {user ? (
+                                <>
+                                    {/* Role badge */}
+                                    <span className={`badge hidden sm:inline-flex ${user.role === 'admin' ? 'badge-warning' : 'badge-teal'}`}>
+                                        {user.role === 'admin' ? '⚙ Admin' : '✓ Patient'}
+                                    </span>
+
+                                    {/* Avatar + name */}
+                                    <div className="flex items-center gap-1.5 pl-1">
+                                        <div
+                                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white shadow-sm flex-shrink-0"
+                                            style={{ background: 'linear-gradient(135deg, #0d9488, #4f46e5)', color: '#fff' }}
+                                            title={user.name || 'User'}
+                                        >
+                                            {initials}
+                                        </div>
+                                        <span className="text-sm font-medium hidden lg:block" style={{ color: '#334155' }}>
+                                            {user.name?.split(' ')[0] ?? 'User'}
+                                        </span>
+                                    </div>
+
+                                    {/* Logout */}
+                                    <button
+                                        onClick={logout}
+                                        className="btn btn-ghost btn-sm hidden sm:flex"
+                                        aria-label="Logout"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                    </button>
+                                </>
+                            ) : (
+                                <Link href="/login" className="btn btn-primary btn-sm">
+                                    Sign In
+                                </Link>
                             )}
-                        </button>
+
+                            {/* Cart — patients only */}
+                            {showCart && (
+                                <button
+                                    onClick={() => setIsCartOpen(true)}
+                                    className="relative p-2.5 rounded-xl transition-all duration-150 hover:bg-teal-50 group"
+                                    style={{ color: '#0d9488' }}
+                                    aria-label={`Cart${totalItems > 0 ? `, ${totalItems} item${totalItems !== 1 ? 's' : ''}` : ''}`}
+                                >
+                                    <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform duration-150" />
+                                    {totalItems > 0 && (
+                                        <span
+                                            className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black text-white ring-2 ring-white"
+                                            style={{
+                                                backgroundColor: '#ef4444',
+                                                animation: 'badgePop 0.3s var(--ease-out) both',
+                                            }}
+                                        >
+                                            {totalItems > 9 ? '9+' : totalItems}
+                                        </span>
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Slide-out Cart Drawer */}
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-        </header>
+        </>
     );
 }

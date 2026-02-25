@@ -5,8 +5,27 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { Product } from '@/types';
-import { Package, ShoppingCart, ArrowLeft, Loader, ShieldCheck, Clock, CheckCircle } from 'lucide-react';
+import { Package, ShoppingCart, ArrowLeft, CheckCircle, Shield, Truck, RotateCcw, Star } from 'lucide-react';
 import { Header } from '@/components/Header';
+import { getApiUrl } from '@/lib/api';
+
+const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+function Spinner() {
+    return (
+        <div className="flex items-center justify-center w-full h-full min-h-[60vh]">
+            <div className="flex flex-col items-center gap-4">
+                <div className="relative w-14 h-14">
+                    <div
+                        className="animate-spin absolute inset-0 rounded-full border-4 border-t-teal-500"
+                        style={{ borderColor: '#e2e8f0', borderTopColor: '#0d9488' }}
+                    />
+                </div>
+                <p className="text-sm font-medium" style={{ color: '#64748b' }}>Loading product…</p>
+            </div>
+        </div>
+    );
+}
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -17,174 +36,261 @@ export default function ProductDetailPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [added, setAdded] = useState(false);
+    const [qty, setQty] = useState(1);
 
     useEffect(() => {
-        const fetchProduct = async () => {
-            try {
-                // In a real app we'd fetch this specific product by ID
-                const res = await fetch('http://localhost:3001/api/products');
-                if (!res.ok) throw new Error('Failed to fetch data');
-                const products: Product[] = await res.json();
-
-                const found = products.find(p => p.id === params.id);
-                if (found) {
-                    setProduct(found);
-                } else {
-                    setError('Product not found');
-                }
-            } catch (err: any) {
-                setError(err.message || 'An error occurred');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (params.id) {
-            fetchProduct();
-        }
+        if (!params.id) return;
+        fetch(`${getApiUrl()}/api/products`)
+            .then(r => { if (!r.ok) throw new Error('failed'); return r.json(); })
+            .then((all: Product[]) => {
+                const found = all.find(p => p.id === params.id);
+                if (found) setProduct(found);
+                else setError('Product not found');
+            })
+            .catch(() => setError('Failed to load product'))
+            .finally(() => setLoading(false));
     }, [params.id]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-slate-950">
-                <Header />
-                <Loader className="w-12 h-12 text-primary animate-spin" />
-            </div>
-        );
-    }
+    const handleAddToCart = () => {
+        if (!product) return;
+        for (let i = 0; i < qty; i++) addItem(product);
+        addToast({
+            type: 'success',
+            message: `${product.name} added to cart`,
+            description: `${qty} × ${INR.format(product.price)} = ${INR.format(product.price * qty)}`,
+            duration: 3000,
+        });
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2000);
+    };
 
-    if (error || !product) {
-        return (
-            <div className="min-h-screen bg-neutral-50 dark:bg-slate-950 flex flex-col pt-24">
-                <Header />
-                <div className="max-w-7xl mx-auto px-8 w-full py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 text-red-600 mb-6">
-                        <Package className="w-10 h-10" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-foreground mb-4">Product Not Found</h1>
-                    <p className="text-muted-foreground mb-8">We couldn't find the product you're looking for.</p>
-                    <button onClick={() => router.back()} className="btn btn-secondary btn-md">
+    const stockStatus = product
+        ? product.stock === 0 ? 'out' : product.stock < 10 ? 'low' : 'ok'
+        : 'ok';
+
+    if (loading) return (
+        <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+            <Header />
+            <Spinner />
+        </div>
+    );
+
+    if (error || !product) return (
+        <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+            <Header />
+            <div className="page-wrapper py-16 text-center">
+                <div className="empty-state">
+                    <div className="empty-state-icon"><Package className="w-8 h-8" style={{ color: '#94a3b8' }} /></div>
+                    <h1 className="empty-state-title">Product Not Found</h1>
+                    <p className="empty-state-desc">{error || 'This medicine is not in our catalog.'}</p>
+                    <button onClick={() => router.back()} className="btn btn-secondary btn-md mt-6">
                         <ArrowLeft className="w-4 h-4" /> Go Back
                     </button>
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
 
-    const handleAddToCart = () => {
-        addItem(product);
-        addToast({
-            type: 'success',
-            message: 'Added to Cart',
-            description: `${product.name} has been added to your cart.`,
-            duration: 2500,
-        });
-    };
-
-    const stockStatus = product.stock === 0 ? 'out' : product.stock < 15 ? 'low' : 'ok';
+    const discount = Math.round(product.price * 0.15);
+    const mrp = product.price + discount;
 
     return (
-        <div className="min-h-screen flex flex-col font-sans bg-neutral-50 dark:bg-slate-950">
+        <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
             <Header />
 
-            <main className="flex-grow pt-32 pb-20 px-4 md:px-8">
-                <div className="max-w-6xl mx-auto">
-                    {/* Back Nav */}
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-8"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Catalog
+            <main className="page-wrapper py-8">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-2 text-sm mb-6 animate-fade-in" style={{ color: '#94a3b8' }}>
+                    <button onClick={() => router.back()} className="hover:text-teal-600 transition-colors flex items-center gap-1">
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Back
                     </button>
+                    <span>/</span>
+                    <span>Medicines</span>
+                    <span>/</span>
+                    <span className="truncate max-w-xs" style={{ color: '#334155' }}>{product.name}</span>
+                </nav>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
-                        {/* Product Visual Container */}
-                        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-12 flex items-center justify-center aspect-square border border-border/50 shadow-sm relative overflow-hidden group">
-                            {/* Decorative background element */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-14">
+                    {/* ── Image Panel ── */}
+                    <div className="animate-fade-in-left">
+                        <div
+                            className="rounded-3xl flex items-center justify-center relative overflow-hidden"
+                            style={{
+                                aspectRatio: '1 / 1',
+                                background: 'linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%)',
+                                border: '1px solid #e2e8f0',
+                            }}
+                        >
+                            <div
+                                className="absolute inset-0 opacity-40"
+                                style={{
+                                    backgroundImage: 'radial-gradient(ellipse at top right, rgba(13,148,136,0.15), transparent 60%)',
+                                }}
+                            />
+                            <Package
+                                className="animate-float"
+                                style={{ width: '10rem', height: '10rem', color: '#0d9488', opacity: 0.35 }}
+                            />
 
-                            <Package className="w-48 h-48 text-primary/20 group-hover:scale-105 group-hover:text-primary/40 transition-all duration-700 ease-out" />
-
-                            {/* Badges Overlay */}
-                            <div className="absolute top-8 left-8 flex flex-col gap-2">
-                                {product.packageSize && (
-                                    <span className="badge badge-neutral shadow-sm bg-white/80 backdrop-blur-md">
-                                        {product.packageSize}
-                                    </span>
+                            {/* Badges */}
+                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                {stockStatus === 'low' && (
+                                    <span className="badge badge-warning">Only {product.stock} left</span>
                                 )}
-                                {stockStatus === 'out' && <span className="badge badge-error shadow-sm">Out of Stock</span>}
-                                {stockStatus === 'low' && <span className="badge badge-warning shadow-sm">Low Stock</span>}
+                                {stockStatus === 'out' && (
+                                    <span className="badge badge-error">Out of Stock</span>
+                                )}
+                                {discount > 0 && stockStatus !== 'out' && (
+                                    <span className="badge badge-teal">15% OFF</span>
+                                )}
                             </div>
                         </div>
 
-                        {/* Product Details Container */}
-                        <div className="flex flex-col justify-center">
-                            {/* Meta */}
-                            <div className="mb-4">
-                                {product.pzn && (
-                                    <p className="font-mono text-sm text-muted-foreground uppercase tracking-widest font-semibold mb-2 flex items-center gap-2">
-                                        PZN: {product.pzn}
-                                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                    </p>
-                                )}
-                                <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight leading-tight text-balance">
-                                    {product.name}
-                                </h1>
-                            </div>
-
-                            {/* Price */}
-                            <div className="flex items-end gap-3 mb-8">
-                                <span className="text-4xl font-black text-primary">
-                                    {product.price > 0 ? `€${product.price.toFixed(2)}` : 'Free'}
-                                </span>
-                                <span className="text-muted-foreground font-medium mb-1">
-                                    per unit
-                                </span>
-                            </div>
-
-                            {/* Description */}
-                            <div className="prose prose-slate dark:prose-invert max-w-none mb-10">
-                                <p className="text-lg leading-relaxed text-muted-foreground">
-                                    {product.description || 'No detailed description available for this medication.'}
-                                </p>
-                            </div>
-
-                            {/* Action Area */}
-                            <div className="p-8 bg-white dark:bg-slate-900 border border-border/50 rounded-3xl shadow-sm mb-8 space-y-6 relative overflow-hidden">
-                                {/* Highlights */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
-                                            <CheckCircle className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-sm font-semibold text-foreground">In Stock</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
-                                            <Clock className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-sm font-semibold text-foreground">Fast Dispatch</span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleAddToCart}
-                                    disabled={stockStatus === 'out'}
-                                    className="btn btn-primary btn-lg w-full text-lg shadow-primary/25 relative group"
+                        {/* Trust icons below */}
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                            {[
+                                { icon: <Shield className="w-4 h-4" />, label: 'Genuine Medicine', color: '#0d9488' },
+                                { icon: <Truck className="w-4 h-4" />, label: 'Free Delivery', color: '#4f46e5' },
+                                { icon: <RotateCcw className="w-4 h-4" />, label: 'Easy Returns', color: '#ea580c' },
+                            ].map(t => (
+                                <div
+                                    key={t.label}
+                                    className="flex flex-col items-center gap-1.5 rounded-xl py-3 text-center"
+                                    style={{ background: '#ffffff', border: '1px solid #f1f5f9' }}
                                 >
-                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                                    <span className="relative flex items-center justify-center gap-2 z-10 w-full text-center">
-                                        <ShoppingCart className="w-5 h-5" />
-                                        {stockStatus === 'out' ? 'Out of Stock' : 'Add to Secure Cart'}
-                                    </span>
-                                </button>
-
-                                <p className="text-center text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                                    Encrypted & Verified Transaction
-                                </p>
-                            </div>
+                                    <span style={{ color: t.color }}>{t.icon}</span>
+                                    <span className="text-[11px] font-semibold" style={{ color: '#475569' }}>{t.label}</span>
+                                </div>
+                            ))}
                         </div>
+                    </div>
+
+                    {/* ── Detail Panel ── */}
+                    <div className="animate-fade-in-up flex flex-col">
+                        {/* PZN */}
+                        {product.pzn && (
+                            <p className="text-xs font-mono font-semibold mb-2 uppercase tracking-widest" style={{ color: '#94a3b8' }}>
+                                PZN: {product.pzn}
+                            </p>
+                        )}
+
+                        <h1
+                            className="font-black leading-tight mb-2"
+                            style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', letterSpacing: '-0.035em', color: '#0f172a' }}
+                        >
+                            {product.name}
+                        </h1>
+
+                        {/* Rating (demo) */}
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="flex">
+                                {[1, 2, 3, 4, 5].map(n => (
+                                    <Star
+                                        key={n}
+                                        className="w-4 h-4"
+                                        fill={n <= 4 ? '#f97316' : 'none'}
+                                        style={{ color: '#f97316' }}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-sm font-semibold" style={{ color: '#0f172a' }}>4.2</span>
+                            <span className="text-sm" style={{ color: '#64748b' }}>(156 reviews)</span>
+                        </div>
+
+                        {/* Price */}
+                        <div
+                            className="rounded-2xl p-4 mb-5"
+                            style={{ background: '#f0fdfa', border: '1px solid #ccfbf1' }}
+                        >
+                            <div className="flex items-baseline gap-3 mb-1">
+                                <span className="font-black text-3xl" style={{ color: '#0d9488' }}>
+                                    {product.price > 0 ? INR.format(product.price) : 'Free'}
+                                </span>
+                                {product.price > 0 && (
+                                    <>
+                                        <span className="text-lg line-through" style={{ color: '#94a3b8' }}>
+                                            {INR.format(mrp)}
+                                        </span>
+                                        <span className="badge badge-teal">15% OFF</span>
+                                    </>
+                                )}
+                            </div>
+                            <p className="text-xs" style={{ color: '#64748b' }}>
+                                Inclusive of all taxes · Free delivery on this item
+                            </p>
+                        </div>
+
+                        {/* Description */}
+                        {product.description && (
+                            <div className="mb-5">
+                                <h3 className="font-semibold mb-2 text-sm" style={{ color: '#0f172a' }}>Description</h3>
+                                <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{product.description}</p>
+                            </div>
+                        )}
+
+                        {/* Meta */}
+                        {product.packageSize && (
+                            <div className="flex items-center gap-2 mb-5">
+                                <span className="text-sm font-medium" style={{ color: '#64748b' }}>Pack Size:</span>
+                                <span className="badge badge-neutral text-xs">{product.packageSize}</span>
+                            </div>
+                        )}
+
+                        {/* Quantity */}
+                        {stockStatus !== 'out' && (
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="text-sm font-medium" style={{ color: '#475569' }}>Qty:</span>
+                                <div className="flex items-center gap-2 rounded-xl border px-3 py-1.5" style={{ borderColor: '#e2e8f0' }}>
+                                    <button
+                                        onClick={() => setQty(q => Math.max(1, q - 1))}
+                                        className="w-6 h-6 flex items-center justify-center rounded-lg text-lg font-bold hover:bg-slate-100 transition-colors"
+                                        style={{ color: '#0d9488' }}
+                                    >
+                                        −
+                                    </button>
+                                    <span className="w-8 text-center font-bold text-base" style={{ color: '#0f172a' }}>{qty}</span>
+                                    <button
+                                        onClick={() => setQty(q => Math.min(product.stock, q + 1))}
+                                        className="w-6 h-6 flex items-center justify-center rounded-lg text-lg font-bold hover:bg-slate-100 transition-colors"
+                                        style={{ color: '#0d9488' }}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                {qty > 1 && (
+                                    <span className="text-sm font-semibold" style={{ color: '#0d9488' }}>
+                                        = {INR.format(product.price * qty)}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* CTA */}
+                        <button
+                            onClick={handleAddToCart}
+                            disabled={stockStatus === 'out' || added}
+                            className="btn btn-lg w-full mb-3"
+                            style={added
+                                ? { background: '#16a34a', color: '#fff' }
+                                : stockStatus === 'out'
+                                    ? { background: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' }
+                                    : { background: 'linear-gradient(135deg, #0d9488, #0f766e)', color: '#fff', boxShadow: '0 4px 20px rgba(13,148,136,0.4)' }
+                            }
+                        >
+                            {added ? (
+                                <><CheckCircle className="w-5 h-5" style={{ animation: 'scaleIn 0.25s ease-out' }} /> Added to Cart!</>
+                            ) : stockStatus === 'out' ? (
+                                'Out of Stock'
+                            ) : (
+                                <><ShoppingCart className="w-5 h-5" /> Add to Cart · {INR.format(product.price * qty)}</>
+                            )}
+                        </button>
+
+                        <p className="text-xs text-center" style={{ color: '#94a3b8' }}>
+                            🔒 100% Secure Checkout · HIPAA Compliant
+                        </p>
                     </div>
                 </div>
             </main>

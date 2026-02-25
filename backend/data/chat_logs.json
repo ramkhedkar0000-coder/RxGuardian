@@ -1,1 +1,52 @@
-[]
+[
+  {
+    "timestamp": "2026-02-25T20:02:20.506Z",
+    "query": "g",
+    "response": "I'm having trouble processing your request right now. Please try again in a moment."
+  },
+  {
+    "timestamp": "2026-02-25T20:03:01.648Z",
+    "query": "who are you",
+    "response": "I'm having trouble processing your request right now. Please try again in a moment."
+  },
+  {
+    "timestamp": "2026-02-25T20:10:17.249Z",
+    "query": "hi",
+    "response": "Hello! I'm RXGuardians, your pharmacy assistant. How can I help you today? I can assist with checking stock, providing product information and pricing, placing orders, or setting up refill reminders."
+  },
+  {
+    "timestamp": "2026-02-25T20:10:45.607Z",
+    "query": "who areyou",
+    "response": "I am RXGuardians, your intelligent pharmacy assistant. I can help you check stock, provide product information and pricing, place orders, and set refill reminders. How can I assist you today?"
+  },
+  {
+    "timestamp": "2026-02-25T20:13:37.083Z",
+    "query": "what is you name",
+    "response": "I am RXGuardians, your intelligent pharmacy assistant. How can I help you today?"
+  },
+  {
+    "timestamp": "2026-02-25T20:15:29.507Z",
+    "query": "Do you have Paracetamol in stock?",
+    "response": "I'm sorry, but we don't carry Paracetamol currently. Can I help you with anything else?"
+  },
+  {
+    "timestamp": "2026-02-25T20:16:08.414Z",
+    "query": "What are your operating hours?",
+    "response": "I'm having trouble processing your request right now. Please try again in a moment."
+  },
+  {
+    "timestamp": "2026-02-25T20:17:21.759Z",
+    "query": "Do you have Paracetamol in stock?",
+    "response": "I'm sorry, but we don't carry Paracetamol currently. Is there anything else I can help you with?"
+  },
+  {
+    "timestamp": "2026-02-25T20:19:44.557Z",
+    "query": "Set a refill reminder for my last order",
+    "response": "I'm sorry, but I don't see any recent orders in your history for PATIENT-001. Could you please let me know which medication you'd like a refill reminder for?"
+  },
+  {
+    "timestamp": "2026-02-25T20:44:45.359Z",
+    "query": "jo",
+    "response": "Hello! I'm RXGuardians, your pharmacy assistant. How can I help you today? I can assist with checking stock, product information, pricing, or placing an order."
+  }
+]

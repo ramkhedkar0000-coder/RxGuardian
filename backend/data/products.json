@@ -1,418 +1,418 @@
 [
   {
     "product id": 16066,
-    "product name": "Panthenol Spray, 46,3 mg/g Schaum zur Anwendung auf der Haut",
-    "pzn": "04020784",
-    "price rec": 16.95,
-    "package size": "130 g",
-    "descriptions": "Schaumspray zur Anwendung auf der Haut. Fördert die Regeneration gereizter oder geschädigter Haut und spendet Feuchtigkeit."
+    "product name": "Soframycin Skin Cream 30g",
+    "pzn": "SOF-10293",
+    "price rec": 55,
+    "package size": "30 g",
+    "descriptions": "Antibacterial cream for cuts, wounds, and minor skin infections. Promotes healing."
   },
   {
     "product id": 976308,
-    "product name": "NORSAN Omega-3 Total",
-    "pzn": "13476520",
-    "price rec": 27,
-    "package size": "200 ml",
-    "descriptions": "Flüssiges Omega-3-Öl aus Fisch. Unterstützt Herz, Gehirn und Gelenke."
+    "product name": "Seven Seas Original Cod Liver Oil",
+    "pzn": "SSO-39482",
+    "price rec": 315,
+    "package size": "100 st",
+    "descriptions": "Rich source of Omega-3, Vitamin A & D for immunity and joint health."
   },
   {
     "product id": 977179,
-    "product name": "NORSAN Omega-3 Vegan",
-    "pzn": "13476394",
-    "price rec": 29,
-    "package size": "100 ml",
-    "descriptions": "Pflanzliches Omega-3 aus Algen. Geeignet für Vegetarier und Veganer."
+    "product name": "HK Vitals Omega 3 Fish Oil (1000mg)",
+    "pzn": "HKV-93821",
+    "price rec": 449,
+    "package size": "60 st",
+    "descriptions": "Premium fish oil for heart, brain, and joint health."
   },
   {
     "product id": 993687,
-    "product name": "NORSAN Omega-3 Kapseln",
-    "pzn": "13512730",
-    "price rec": 29,
-    "package size": "120 st",
-    "descriptions": "Omega-3-Kapseln zur täglichen Nahrungsergänzung."
+    "product name": "Neurobion Forte Tablet",
+    "pzn": "NEU-48291",
+    "price rec": 41.5,
+    "package size": "30 st",
+    "descriptions": "Vitamin B complex supplement for nerve health and immunity."
   },
   {
     "product id": 1225428,
-    "product name": "Vividrin® iso EDO® antiallergische Augentropfen",
-    "pzn": "16507327",
-    "price rec": 8.28,
-    "package size": "30x0.5 ml",
-    "descriptions": "Konservierungsmittelfreie Augentropfen zur Linderung allergischer Beschwerden wie Juckreiz und Rötung."
+    "product name": "Refresh Tears Eye Drops",
+    "pzn": "REF-83921",
+    "price rec": 145,
+    "package size": "10 ml",
+    "descriptions": "Lubricating eye drops for dry and irritated eyes."
   },
   {
     "product id": 202796,
-    "product name": "Aqualibra 80 mg/90 mg/180 mg Filmtabletten",
-    "pzn": "00795287",
-    "price rec": 27.82,
-    "package size": "60 st",
-    "descriptions": "Pflanzliches Arzneimittel zur Unterstützung der Blasenfunktion."
+    "product name": "Shelcal 500 Tablet",
+    "pzn": "SHE-20193",
+    "price rec": 131,
+    "package size": "15 st",
+    "descriptions": "Calcium and Vitamin D3 supplement for strong bones."
   },
   {
     "product id": 1103035,
-    "product name": "Vitasprint Pro Energie",
-    "pzn": "14050243",
-    "price rec": 15.95,
-    "package size": "8 st",
-    "descriptions": "Nahrungsergänzungsmittel mit B-Vitaminen und Aminosäuren zur Verringerung von Müdigkeit."
+    "product name": "Supradyn Daily Multivitamin",
+    "pzn": "SUP-10938",
+    "price rec": 60,
+    "package size": "15 st",
+    "descriptions": "Daily multivitamin tablet with minerals for energy and immunity."
   },
   {
     "product id": 27955,
-    "product name": "Cystinol akut®",
-    "pzn": "07114824",
-    "price rec": 26.5,
+    "product name": "Himalaya Cystone Tablets",
+    "pzn": "HIM-39210",
+    "price rec": 165,
     "package size": "60 st",
-    "descriptions": "Pflanzliches Arzneimittel zur Behandlung akuter Harnwegsinfektionen."
+    "descriptions": "Ayurvedic supplement for maintaining kidney and urinary tract health."
   },
   {
     "product id": 30955,
-    "product name": "Cromo-ratiopharm® Augentropfen Einzeldosis",
-    "pzn": "04884527",
-    "price rec": 7.59,
-    "package size": "20x0.5 ml",
-    "descriptions": "Antiallergische Augentropfen zur Vorbeugung und Behandlung von allergischen Augenbeschwerden."
+    "product name": "Ciplox Eye/Ear Drops",
+    "pzn": "CIP-49182",
+    "price rec": 18.5,
+    "package size": "10 ml",
+    "descriptions": "Antibiotic drops for bacterial infections of the eye or ear."
   },
   {
     "product id": 1162261,
-    "product name": "Kijimea Reizdarm PRO",
-    "pzn": "15999676",
-    "price rec": 38.99,
-    "package size": "28 st",
-    "descriptions": "Medizinisches Produkt zur Linderung von Symptomen des Reizdarmsyndroms wie Blähungen und Bauchschmerzen."
+    "product name": "Eno Regular Antacid Powder",
+    "pzn": "ENO-02913",
+    "price rec": 9,
+    "package size": "5 g",
+    "descriptions": "Fast relief from acidity, heartburn, and gas."
   },
   {
     "product id": 1204782,
-    "product name": "Mucosolvan 1 mal täglich Retardkapseln",
-    "pzn": "15210915",
-    "price rec": 39.97,
-    "package size": "50 st",
-    "descriptions": "Langwirksames Arzneimittel zur Schleimlösung bei Husten."
+    "product name": "Benadryl Cough Formula",
+    "pzn": "BEN-18302",
+    "price rec": 128,
+    "package size": "150 ml",
+    "descriptions": "Effective relief from cough, cold, and throat irritation."
   },
   {
     "product id": 1210016,
-    "product name": "OMNi-BiOTiC SR-9 mit B-Vitaminen",
-    "pzn": "16487346",
-    "price rec": 44.5,
-    "package size": "28x3 g",
-    "descriptions": "Probiotikum mit B-Vitaminen zur Unterstützung der Darmflora und des Energiestoffwechsels."
+    "product name": "Becosules Z Capsules",
+    "pzn": "BEC-38291",
+    "price rec": 48.5,
+    "package size": "20 st",
+    "descriptions": "B-Complex forte with Vitamin C & Zinc for nutritional support."
   },
   {
     "product id": 1245942,
-    "product name": "Osa Schorf Spray",
-    "pzn": "16781761",
-    "price rec": 15.45,
-    "package size": "30 ml",
-    "descriptions": "Pflegespray zur sanften Entfernung von Milchschorf und trockener Kopfhaut bei Babys."
+    "product name": "Johnson's Baby Bath",
+    "pzn": "JON-29103",
+    "price rec": 95,
+    "package size": "100 ml",
+    "descriptions": "No more tears formula. Pure and gentle daily care for your baby."
   },
   {
     "product id": 1247528,
-    "product name": "Multivitamin Fruchtgummibärchen vegan u zuckerfrei",
-    "pzn": "16908486",
-    "price rec": 12.74,
-    "package size": "60 st",
-    "descriptions": "Vegane, zuckerfreie Multivitamin-Gummibärchen zur täglichen Versorgung mit Vitaminen."
+    "product name": "Revital H Multivitamin",
+    "pzn": "REV-04928",
+    "price rec": 310,
+    "package size": "30 st",
+    "descriptions": "Daily health supplement for physical and mental energy."
   },
   {
     "product id": 1273105,
-    "product name": "Iberogast® Classic, Flüssigkeit zum Einnehmen",
-    "pzn": "16507540",
-    "price rec": 28.98,
-    "package size": "50 ml",
-    "descriptions": "Pflanzliches Arzneimittel bei Magen-Darm-Beschwerden."
+    "product name": "Digene Antacid Tablet (Mint)",
+    "pzn": "DIG-10294",
+    "price rec": 22,
+    "package size": "15 st",
+    "descriptions": "Chewable tablets for quick relief from acidity and gas."
   },
   {
     "product id": 1358905,
-    "product name": "COLPOFIX®",
-    "pzn": "18389398",
-    "price rec": 49.6,
-    "package size": "40 ml",
-    "descriptions": "Vaginalgel zur Unterstützung der Gesundheit der Zervixschleimhaut."
+    "product name": "VWash Plus Expert Intimate Hygiene",
+    "pzn": "VWA-38291",
+    "price rec": 180,
+    "package size": "100 ml",
+    "descriptions": "Intimate wash for women with lactic acid for pH balance."
   },
   {
     "product id": 1293377,
-    "product name": "Augentropfen RedCare",
-    "pzn": "17396686",
-    "price rec": 12.69,
-    "package size": "10 ml",
-    "descriptions": "Befeuchtende Augentropfen bei trockenen oder gereizten Augen."
+    "product name": "Dolo 650 Tablet",
+    "pzn": "DOL-39281",
+    "price rec": 33.5,
+    "package size": "15 st",
+    "descriptions": "Paracetamol tablet for fast relief from fever and body ache."
   },
   {
     "product id": 1313639,
-    "product name": "MULTILAC Darmsynbiotikum",
-    "pzn": "17931783",
-    "price rec": 9.99,
-    "package size": "10 st",
-    "descriptions": "Kombination aus Pro- und Präbiotika zur Unterstützung der Verdauung."
+    "product name": "Econorm Sachet",
+    "pzn": "ECO-20192",
+    "price rec": 45,
+    "package size": "1 st",
+    "descriptions": "Probiotic sachet for the treatment of acute diarrhea."
   },
   {
     "product id": 1319766,
-    "product name": "SAW PALMETO (SÄGEPALME) 350 mg",
-    "pzn": "18216723",
-    "price rec": 8.47,
-    "package size": "100 st",
-    "descriptions": "Pflanzliches Nahrungsergänzungsmittel zur Unterstützung der Prostatafunktion."
+    "product name": "Himalaya Speman Tablets",
+    "pzn": "HIM-29381",
+    "price rec": 170,
+    "package size": "60 st",
+    "descriptions": "Ayurvedic formulation supporting men's reproductive health."
   },
   {
     "product id": 1329121,
-    "product name": "Paracetamol apodiscounter 500 mg Tabletten",
-    "pzn": "18188323",
-    "price rec": 2.06,
-    "package size": "20 st",
-    "descriptions": "Schmerz- und fiebersenkendes Arzneimittel."
+    "product name": "Crocin Advance Tablet",
+    "pzn": "CRO-10293",
+    "price rec": 20.3,
+    "package size": "15 st",
+    "descriptions": "Fast-acting paracetamol for headache and fever relief."
   },
   {
     "product id": 1352774,
-    "product name": "Prostata Men Kapseln",
-    "pzn": "18657640",
-    "price rec": 19.99,
-    "package size": "60 st",
-    "descriptions": "Nahrungsergänzungsmittel zur Unterstützung der Prostatagesundheit."
+    "product name": "Volini Pain Relief Gel",
+    "pzn": "VOL-39281",
+    "price rec": 115,
+    "package size": "30 g",
+    "descriptions": "Diclofenac gel for quick relief from joint, neck, and back pain."
   },
   {
     "product id": 1357649,
-    "product name": "Natural Intimate Creme",
-    "pzn": "18769758",
-    "price rec": 18.9,
-    "package size": "50 ml",
-    "descriptions": "Pflegecreme zur Befeuchtung und zum Schutz des sensiblen Intimbereichs."
+    "product name": "Candid Dusting Powder",
+    "pzn": "CAN-49201",
+    "price rec": 145,
+    "package size": "100 g",
+    "descriptions": "Clotrimazole expert skin care powder for fungal infections."
   },
   {
     "product id": 1358513,
-    "product name": "proBIO 6 Probiotik Kapseln APOMIA",
-    "pzn": "18317737",
-    "price rec": 34.9,
-    "package size": "30 st",
-    "descriptions": "Probiotische Kapseln zur Unterstützung einer gesunden Darmflora."
+    "product name": "Bifilac Capsule",
+    "pzn": "BIF-20193",
+    "price rec": 125,
+    "package size": "10 st",
+    "descriptions": "Pre-probiotic supplement for healthy digestion and gut flora."
   },
   {
     "product id": 1363580,
-    "product name": "Eucerin DERMOPURE Triple Effect Reinigungsgel",
-    "pzn": "18222095",
-    "price rec": 17.25,
-    "package size": "150 ml",
-    "descriptions": "Reinigungsgel für unreine Haut, reduziert Unreinheiten und Pickelmale."
+    "product name": "Cetaphil Gentle Skin Cleanser",
+    "pzn": "CET-39281",
+    "price rec": 360,
+    "package size": "125 ml",
+    "descriptions": "Mild, non-irritating face and body wash for sensitive skin."
   },
   {
     "product id": 1381140,
-    "product name": "frida baby FlakeFixer",
-    "pzn": "19140755",
-    "price rec": 0,
-    "package size": "1 st",
-    "descriptions": "Sanfte Pflege zur Entfernung von Milchschorf bei Babys."
+    "product name": "Himalaya Baby Massage Oil",
+    "pzn": "HIM-10293",
+    "price rec": 120,
+    "package size": "100 ml",
+    "descriptions": "Enriched with Olive oil and Winter Cherry for baby's healthy growth."
   },
   {
     "product id": 1383626,
-    "product name": "Vitasprint Duo Energie",
-    "pzn": "18760556",
-    "price rec": 16.95,
-    "package size": "20 st",
-    "descriptions": "Nahrungsergänzungsmittel mit Vitaminen und Mineralstoffen zur Steigerung der Energie."
+    "product name": "Zincovit Tablet",
+    "pzn": "ZIN-39281",
+    "price rec": 110,
+    "package size": "15 st",
+    "descriptions": "Multivitamin and multimineral supplement with Zinc."
   },
   {
     "product id": 11334,
-    "product name": "Bepanthen WUND- UND HEILSALBE, 50 mg/g Salbe",
-    "pzn": "01580241",
-    "price rec": 7.69,
+    "product name": "Boroline Antiseptic Cream",
+    "pzn": "BOR-10293",
+    "price rec": 42,
     "package size": "20 g",
-    "descriptions": "Salbe zur Unterstützung der Wundheilung und Pflege trockener Haut."
+    "descriptions": "Trusted antiseptic cream for dry skin, cuts, and cracked heels."
   },
   {
     "product id": 1391185,
-    "product name": "V-Biotics Flora Complex",
-    "pzn": "19296256",
-    "price rec": 19.9,
-    "package size": "19 g",
-    "descriptions": "Probiotisches Nahrungsergänzungsmittel zur Unterstützung von Darm und Immunsystem."
+    "product name": "Enterogermina Oral Suspension",
+    "pzn": "ENT-39281",
+    "price rec": 56,
+    "package size": "1 st",
+    "descriptions": "Bacillus clausii probiotic for diarrhea and digestive health."
   },
   {
     "product id": 1403860,
-    "product name": "Aveeno Skin Relief Body Lotion",
-    "pzn": "19342855",
-    "price rec": 14.99,
-    "package size": "300 ml",
-    "descriptions": "Beruhigende Körperlotion für sehr trockene und juckende Haut."
+    "product name": "Vaseline Intensive Care Lotion",
+    "pzn": "VAS-20193",
+    "price rec": 265,
+    "package size": "400 ml",
+    "descriptions": "Deep moisture body lotion for dry and rough skin."
   },
   {
     "product id": 1434198,
-    "product name": "Centrum Vital+ Mentale Leistung",
-    "pzn": "19486198",
-    "price rec": 19.95,
-    "package size": "30 st",
-    "descriptions": "Multivitaminpräparat zur Unterstützung der geistigen Leistungsfähigkeit."
+    "product name": "Brahmi Vati",
+    "pzn": "BRA-39281",
+    "price rec": 180,
+    "package size": "40 st",
+    "descriptions": "Ayurvedic supplement for memory enhancement and mental clarity."
   },
   {
     "product id": 1434864,
-    "product name": "Redcare Wundschutzcreme",
-    "pzn": "19280947",
-    "price rec": 14.39,
-    "package size": "100 ml",
-    "descriptions": "Schutzcreme für gereizte und empfindliche Haut."
+    "product name": "Sudocrem Antiseptic Healing Cream",
+    "pzn": "SUD-10293",
+    "price rec": 350,
+    "package size": "60 g",
+    "descriptions": "Soothing cream for diaper rash and surface skin irritations."
   },
   {
     "product id": 1435154,
-    "product name": "Cetaphil Sanft glättende SA Reinigung",
-    "pzn": "19720688",
-    "price rec": 13.95,
-    "package size": "236 ml",
-    "descriptions": "Sanfte Reinigung mit Salicylsäure für raue und unebene Haut."
+    "product name": "ACNEMOIST Cream",
+    "pzn": "ACN-39281",
+    "price rec": 330,
+    "package size": "60 g",
+    "descriptions": "Moisturizer specially formulated for acne-prone skin."
   },
   {
     "product id": 14176,
-    "product name": "Magnesium Verla® N Dragées, magensaftresistente Tabletten",
-    "pzn": "03554928",
-    "price rec": 6.4,
-    "package size": "50 st",
-    "descriptions": "Magnesiumpräparat zur Unterstützung von Muskeln und Nerven."
+    "product name": "Telmikind 40 Tablet",
+    "pzn": "TEL-20193",
+    "price rec": 58,
+    "package size": "10 st",
+    "descriptions": "Telmisartan medicine for managing high blood pressure. (Rx)"
   },
   {
     "product id": 704523,
-    "product name": "Livocab® direkt Augentropfen, 0,05 % Augentropfen, Suspension",
-    "pzn": "00676714",
-    "price rec": 14.99,
-    "package size": "4 ml",
-    "descriptions": "Schnell wirksame Augentropfen bei allergischen Augenbeschwerden."
+    "product name": "Zandu Balm",
+    "pzn": "ZAN-39281",
+    "price rec": 45,
+    "package size": "10 ml",
+    "descriptions": "Ayurvedic balm for fast relief from headache and body ache."
   },
   {
     "product id": 185422,
-    "product name": "Cetirizin HEXAL® Tropfen bei Allergien, 10 mg/ml Tropfen zum Einnehmen, Lösung",
-    "pzn": "02579607",
-    "price rec": 13.19,
-    "package size": "10 ml",
-    "descriptions": "Antihistaminikum zur Linderung von Allergiesymptomen."
+    "product name": "Allegra 120mg Tablet",
+    "pzn": "ALL-10293",
+    "price rec": 215,
+    "package size": "10 st",
+    "descriptions": "Non-drowsy antihistamine for allergy and cold symptoms."
   },
   {
     "product id": 198010,
-    "product name": "Loperamid akut - 1 A Pharma®, 2 mg Hartkapseln",
-    "pzn": "01338066",
-    "price rec": 3.93,
+    "product name": "Imodium 2mg Capsule",
+    "pzn": "IMO-39281",
+    "price rec": 44,
     "package size": "10 st",
-    "descriptions": "Arzneimittel zur Behandlung von akutem Durchfall."
+    "descriptions": "Loperamide medicine for fast, effective diarrhea relief."
   },
   {
     "product id": 202006,
-    "product name": "Ramipril - 1 A Pharma® 10 mg Tabletten",
-    "pzn": "00766794",
-    "price rec": 12.59,
-    "package size": "20 st",
-    "descriptions": "Verschreibungspflichtiges Arzneimittel zur Behandlung von Bluthochdruck."
+    "product name": "Amlokind 5 Tablet",
+    "pzn": "AML-20193",
+    "price rec": 26,
+    "package size": "10 st",
+    "descriptions": "Amlodipine tablet for management of hypertension. (Rx)"
   },
   {
     "product id": 306595,
-    "product name": "GRANU FINK® femina, Hartkapseln",
-    "pzn": "01499852",
-    "price rec": 20.29,
-    "package size": "30 st",
-    "descriptions": "Pflanzliches Arzneimittel zur Unterstützung der Blasengesundheit bei Frauen."
+    "product name": "Himalaya Ashvagandha Tablet",
+    "pzn": "HIM-49201",
+    "price rec": 200,
+    "package size": "60 st",
+    "descriptions": "Rejuvenating herb for stress relief and general wellness."
   },
   {
     "product id": 324024,
-    "product name": "Vitasprint B12 Kapseln",
-    "pzn": "04909523",
-    "price rec": 17.04,
-    "package size": "20 st",
-    "descriptions": "Vitamin-B12-Präparat zur Unterstützung von Energie und Nervenfunktion."
+    "product name": "Nurokind-LC Tablet",
+    "pzn": "NUR-39281",
+    "price rec": 185,
+    "package size": "15 st",
+    "descriptions": "L-Carnitine, Mecobalamin supplement for nerve and muscle cramps."
   },
   {
     "product id": 332568,
-    "product name": "Sinupret® Saft",
-    "pzn": "00605588",
-    "price rec": 13.3,
+    "product name": "Honitus Cough Syrup",
+    "pzn": "HON-10293",
+    "price rec": 105,
     "package size": "100 ml",
-    "descriptions": "Pflanzliches Arzneimittel bei Nasennebenhöhlenentzündungen."
+    "descriptions": "Ayurvedic honey-based cough remedy without drowsiness."
   },
   {
     "product id": 335765,
-    "product name": "Nurofen 200 mg Schmelztabletten Lemon",
-    "pzn": "02547582",
-    "price rec": 10.98,
-    "package size": "12 st",
-    "descriptions": "Ibuprofen-Schmerzmittel in schnell löslicher Form."
+    "product name": "Combiflam Tablet",
+    "pzn": "COM-39281",
+    "price rec": 46,
+    "package size": "20 st",
+    "descriptions": "Ibuprofen + Paracetamol combination for pain and fever."
   },
   {
     "product id": 363715,
-    "product name": "Vitamin B-Komplex-ratiopharm",
-    "pzn": "04132750",
-    "price rec": 24.97,
-    "package size": "60 st",
-    "descriptions": "Kombination verschiedener B-Vitamine zur Unterstützung des Nervensystems."
+    "product name": "Evion 400 Vitamin E Capsule",
+    "pzn": "EVI-20193",
+    "price rec": 36.5,
+    "package size": "10 st",
+    "descriptions": "Vitamin E supplement for healthy skin, hair, and immunity."
   },
   {
     "product id": 368333,
-    "product name": "Calmvalera Hevert Tropfen",
-    "pzn": "06560421",
-    "price rec": 35.97,
-    "package size": "100 ml",
-    "descriptions": "Homöopathisches Arzneimittel bei nervöser Unruhe und Schlafstörungen."
+    "product name": "Otrivin Adult Nasal Spray",
+    "pzn": "OTR-39281",
+    "price rec": 95,
+    "package size": "10 ml",
+    "descriptions": "Xylometazoline fast-acting relief for blocked nose."
   },
   {
     "product id": 1248085,
-    "product name": "femiLoges® 4 mg magensaftresistente Tabletten",
-    "pzn": "16815862",
-    "price rec": 20.44,
-    "package size": "30 st",
-    "descriptions": "Hormonfreies Arzneimittel zur Linderung von Wechseljahresbeschwerden."
+    "product name": "Thyronorm 50mcg Tablet",
+    "pzn": "THY-10293",
+    "price rec": 165,
+    "package size": "120 st",
+    "descriptions": "Thyroxine supplement for the treatment of hypothyroidism. (Rx)"
   },
   {
     "product id": 376212,
-    "product name": "Umckaloabo® Saft für Kinder",
-    "pzn": "08871266",
-    "price rec": 13.15,
-    "package size": "120 ml",
-    "descriptions": "Pflanzlicher Saft zur Behandlung von Atemwegsinfektionen bei Kindern."
+    "product name": "Dabur Chyawanprash",
+    "pzn": "DAB-39281",
+    "price rec": 365,
+    "package size": "1 kg",
+    "descriptions": "Ayurvedic immunity builder enriched with Amla and herbs."
   },
   {
     "product id": 368367,
-    "product name": "DulcoLax® Dragées, 5 mg magensaftresistente Tabletten",
-    "pzn": "06800196",
-    "price rec": 22.9,
-    "package size": "100 st",
-    "descriptions": "Abführmittel zur kurzfristigen Behandlung von Verstopfung."
+    "product name": "Dulcolax 5mg Tablet",
+    "pzn": "DUL-20193",
+    "price rec": 12.5,
+    "package size": "10 st",
+    "descriptions": "Bisacodyl overnight relief from occasional constipation."
   },
   {
     "product id": 717525,
-    "product name": "Diclo-ratiopharm Schmerzgel",
-    "pzn": "04704198",
-    "price rec": 8.89,
+    "product name": "Moov Pain Relief Spray",
+    "pzn": "MOO-39281",
+    "price rec": 165,
     "package size": "50 g",
-    "descriptions": "Schmerzgel zur äußeren Anwendung bei Muskel- und Gelenkschmerzen."
+    "descriptions": "Fast-absorbing spray for back, joint, and muscle pain."
   },
   {
     "product id": 772646,
-    "product name": "Minoxidil BIO-H-TIN-Pharma 20 mg/ml Spray zur Anwendung auf der Haut (Kopfhaut), Lösung",
-    "pzn": "10391763",
-    "price rec": 22.5,
+    "product name": "Mintop 5% Minoxidil Lotion",
+    "pzn": "MIN-10293",
+    "price rec": 680,
     "package size": "60 ml",
-    "descriptions": "Lösung zur Anwendung auf der Kopfhaut bei erblich bedingtem Haarausfall."
+    "descriptions": "Topical solution for the treatment of hereditary hair loss."
   },
   {
     "product id": 790415,
-    "product name": "Hyaluron-ratiopharm® Augentropfen",
-    "pzn": "10810214",
-    "price rec": 13.74,
+    "product name": "Systane Ultra Eye Drops",
+    "pzn": "SYS-39281",
+    "price rec": 485,
     "package size": "10 ml",
-    "descriptions": "Befeuchtende Augentropfen mit Hyaluronsäure bei trockenen Augen."
+    "descriptions": "High-performance hydration for burning and irritated eyes."
   },
   {
     "product id": 790661,
-    "product name": "FeniHydrocort Creme 0,25 %",
-    "pzn": "10796980",
-    "price rec": 8.59,
-    "package size": "20 g",
-    "descriptions": "Kortisonhaltige Creme zur Behandlung leichter Hautentzündungen und Juckreiz."
+    "product name": "Soframycin Skin Cream 100g",
+    "pzn": "SOF-20193",
+    "price rec": 140,
+    "package size": "100 g",
+    "descriptions": "Antibacterial cream for cuts, wounds, and minor skin infections."
   },
   {
     "product id": 879236,
-    "product name": "Eucerin UreaRepair PLUS Lotion 10%",
-    "pzn": "11678159",
-    "price rec": 27.75,
-    "package size": "400 ml",
-    "descriptions": "Intensiv pflegende Lotion für sehr trockene und raue Haut."
+    "product name": "Venusia Max Intensive Moisturizing Cream",
+    "pzn": "VEN-39281",
+    "price rec": 615,
+    "package size": "150 g",
+    "descriptions": "Advanced hydration formula for very dry to normal skin types."
   },
   {
     "product id": 899231,
-    "product name": "Vigantolvit 2000 I.E. Vitamin D3",
-    "pzn": "12423869",
-    "price rec": 17.99,
-    "package size": "120 st",
-    "descriptions": "Vitamin-D-Präparat zur Unterstützung von Knochen und Immunsystem."
+    "product name": "Calcimax Forte Plus Tablet",
+    "pzn": "CAL-10293",
+    "price rec": 265,
+    "package size": "30 st",
+    "descriptions": "Comprehensive mineral formula for bone, joint, and muscle care."
   }
 ]

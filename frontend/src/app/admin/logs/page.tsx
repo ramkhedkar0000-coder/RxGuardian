@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Bot, ShoppingCart, MessageSquare, Package } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
 
 interface LogEntry {
     timestamp: string;
@@ -18,7 +19,7 @@ export default function LogsPage() {
     const [filter, setFilter] = useState<Filter>('all');
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/logs')
+        fetch(`${getApiUrl()}/api/logs`)
             .then(r => r.json())
             .then(d => { setLogs([...d].reverse()); setLoading(false); })
             .catch(() => setLoading(false));

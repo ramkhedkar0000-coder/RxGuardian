@@ -38,9 +38,9 @@ app.get('/', (_req: Request, res: Response) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCTS  — reads live from Excel (30s TTL cache)
 // ═══════════════════════════════════════════════════════════════════════════════
-app.get('/api/products', (_req: Request, res: Response) => {
+app.get('/api/products', async (_req: Request, res: Response) => {
     try {
-        const products = loadProducts();
+        const products = await loadProducts();
         // Return the normalised Product shape the frontend expects
         res.json(products);
     } catch (err) {
@@ -52,9 +52,9 @@ app.get('/api/products', (_req: Request, res: Response) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ORDERS  — reads live from Excel (30s TTL cache)
 // ═══════════════════════════════════════════════════════════════════════════════
-app.get('/api/orders', (_req: Request, res: Response) => {
+app.get('/api/orders', async (_req: Request, res: Response) => {
     try {
-        res.json(getOrders());
+        res.json(await getOrders());
     } catch (err) {
         res.status(500).json({ error: 'Failed to load orders' });
     }
@@ -94,9 +94,9 @@ app.post('/api/orders', async (req: Request, res: Response) => {
 // REFILL ALERTS  — computed from live orders
 // Shape returned: { patient_id, medication, last_order_date, days_since_last_order, recommendation }
 // ═══════════════════════════════════════════════════════════════════════════════
-app.get('/api/refill-alerts', (_req: Request, res: Response) => {
+app.get('/api/refill-alerts', async (_req: Request, res: Response) => {
     try {
-        const orders = getOrders();
+        const orders = await getOrders();
         const today = new Date();
 
         // Group orders by patient+product, get most recent purchase per pair
@@ -183,8 +183,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
             return;
         }
 
-        const products = loadProducts();
-        const orders = getOrders();
+        const products = await loadProducts();
+        const orders = await getOrders();
 
         const responseText = await processUserQuery(
             message,
@@ -230,7 +230,7 @@ app.get('/api/notifications', (_req: Request, res: Response) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-    console.log(`\n🚀 RXGuardians Backend running on http://localhost:${PORT}`);
-    console.log(`📋 Data source: Excel files (30s cache)`);
-    console.log(`🤖 Gemini AI: ${process.env.GEMINI_API_KEY ? '✅ configured' : '⚠️  GEMINI_API_KEY not set'}\n`);
+    console.log(`\n[Server] RXGuardians Backend running on http://localhost:${PORT}`);
+    console.log(`[Data] Source: Live Supabase Postgres DB`);
+    console.log(`[AI] Gemini: ${process.env.GEMINI_API_KEY ? 'configured' : 'API_KEY not set'}\n`);
 });
