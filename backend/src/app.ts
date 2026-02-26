@@ -15,6 +15,7 @@ import { loadProducts } from './services/productService';
 import { getOrders, addOrder } from './services/orderService';
 import { processUserQuery, getSmartLogs } from './services/chatService';
 import { sendRefillReminder, getNotificationLogs } from './services/notificationService';
+import { calculateRefillAlerts } from './services/refillService';
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/', (_req: Request, res: Response) => {
@@ -97,73 +98,27 @@ app.post('/api/orders', async (req: Request, res: Response) => {
 app.get('/api/refill-alerts', async (_req: Request, res: Response) => {
     try {
         const orders = await getOrders();
-        const today = new Date();
+        const alerts = calculateRefillAlerts(orders);
 
-        // Group orders by patient+product, get most recent purchase per pair
-        const groupedMap = new Map<string, any>();
-        for (const order of orders) {
-            const patientId = order['Patient ID'] || 'UNKNOWN';
-            const product = order['Product Name'] || '';
-            const key = `${patientId}::${product}`;
-
-            // Parse purchase date
-            let purchaseDate: Date;
-            if (order._purchaseDateISO) {
-                purchaseDate = new Date(order._purchaseDateISO);
-            } else if (typeof order['Purchase Date'] === 'number') {
-                purchaseDate = new Date((order['Purchase Date'] - 25569) * 86400 * 1000);
-            } else {
-                purchaseDate = new Date(order['Purchase Date']);
-            }
-
-            const existing = groupedMap.get(key);
-            if (!existing || purchaseDate > new Date(existing.lastDate)) {
-                groupedMap.set(key, {
-                    patient_id: patientId,
-                    medication: product,
-                    lastDate: purchaseDate.toISOString(),
-                    quantity: order['Quantity'] || 1,
-                    dosageFrequency: order['Dosage Frequency'] || 'Once daily',
-                });
-            }
-        }
-
-        const alerts = Array.from(groupedMap.values()).map(entry => {
-            const lastDate = new Date(entry.lastDate);
-            const daysSince = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            // Estimate days supply from quantity & dosage
-            const freq = (entry.dosageFrequency || '').toLowerCase();
-            let dailyUsage = 1;
-            if (freq.includes('twice') || freq.includes('2x')) dailyUsage = 2;
-            else if (freq.includes('thrice') || freq.includes('three') || freq.includes('3x')) dailyUsage = 3;
-            else if (freq.includes('4 hours')) dailyUsage = 6;
-            else if (freq.includes('6 hours')) dailyUsage = 4;
-            else if (freq.includes('8 hours')) dailyUsage = 3;
-            else if (freq.includes('weekly')) dailyUsage = 1 / 7;
-
-            const daysSupply = Math.round(entry.quantity / dailyUsage);
-
+        const mappedAlerts = alerts.map(alert => {
+            const daysSince = Math.floor((new Date().getTime() - alert.purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
             let recommendation = 'Continue monitoring';
-            if (daysSince > daysSupply) recommendation = 'Overdue — contact patient immediately';
-            else if (daysSince > daysSupply - 5) recommendation = 'Refill due soon — send reminder';
+            if (daysSince > alert.daysSupply) recommendation = 'Overdue — contact patient immediately';
+            else if (daysSince > alert.daysSupply - 5) recommendation = 'Refill due soon — send reminder';
             else if (daysSince > 25) recommendation = 'Check with patient on adherence';
 
             return {
-                patient_id: entry.patient_id,
-                medication: entry.medication,
-                last_order_date: entry.lastDate,
+                patient_id: alert.patientId,
+                medication: alert.productName,
+                last_order_date: alert.purchaseDate.toISOString(),
                 days_since_last_order: daysSince,
-                days_supply: daysSupply,
-                dosage_frequency: entry.dosageFrequency,
+                days_supply: alert.daysSupply,
+                dosage_frequency: alert.dosageFrequency,
                 recommendation,
             };
         });
 
-        // Sort: most days since (most urgent) first
-        alerts.sort((a, b) => b.days_since_last_order - a.days_since_last_order);
-
-        res.json(alerts);
+        res.json(mappedAlerts);
     } catch (err) {
         console.error('[/api/refill-alerts]', err);
         res.status(500).json({ error: 'Failed to calculate refill alerts' });
