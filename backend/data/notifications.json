@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "NOTIF-1772132504824",
+    "patientId": "P-001",
+    "type": "EMAIL",
+    "status": "SENT",
+    "timestamp": "2026-02-26T19:01:44.824Z",
+    "message": "Hi P-001, your prescription for Test Med is due for a refill on 12/1/2023. Reply 'YES' to order."
+  }
+]

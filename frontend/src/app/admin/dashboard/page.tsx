@@ -9,6 +9,8 @@ interface RefillAlert {
     medication: string;
     last_order_date: string;
     days_since_last_order: number;
+    days_supply: number;
+    dosage_frequency: string;
     recommendation: string;
 }
 
@@ -23,12 +25,50 @@ export default function DashboardPage() {
             .catch(() => setLoading(false));
     }, []);
 
-    const urgent = alerts.filter(a => a.days_since_last_order > 25);
-    const regular = alerts.filter(a => a.days_since_last_order <= 25);
+    const urgent = alerts.filter(a => a.days_since_last_order > a.days_supply);
+    const regular = alerts.filter(a => a.days_since_last_order <= a.days_supply);
 
-    const notify = (patientId: string) => {
+    const notify = async (alertData: RefillAlert) => {
         if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-        alert(`Refill notification sent to patient ${patientId}`);
+
+        try {
+            // Reconstruct the expected RefillAlert object for the backend service
+            // Note: The backend service expects keys: patientId, productName, expectedRefillDate, etc.
+            // But here we only have the mapped data from GET /api/refill-alerts.
+            // However, the backend /api/notify-refill expects an 'alert' object.
+            // Let's adapt the data structure to match what sendRefillReminder needs, as best as we can.
+            // Actually, looking at sendRefillReminder, it uses: alert.patientId, alert.productName, alert.expectedRefillDate
+
+            // Calculate expected refill date roughly
+            const lastDate = new Date(alertData.last_order_date);
+            const expectedDate = new Date(lastDate);
+            expectedDate.setDate(expectedDate.getDate() + alertData.days_supply);
+
+            const payload = {
+                alert: {
+                    patientId: alertData.patient_id,
+                    productName: alertData.medication,
+                    expectedRefillDate: expectedDate.toISOString(),
+                    // Other fields might be optional or we can mock them if needed for the log message
+                },
+                channel: 'EMAIL'
+            };
+
+            const res = await fetch(`${getApiUrl()}/api/notify-refill`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                window.alert(`Refill notification sent to patient ${alertData.patient_id}`);
+            } else {
+                throw new Error('Failed to send');
+            }
+        } catch (e) {
+            window.alert('Failed to send notification. Please try again.');
+            console.error(e);
+        }
     };
 
     const stats = [
@@ -40,7 +80,7 @@ export default function DashboardPage() {
             valueColor: 'var(--color-neutral-900)',
         },
         {
-            label: 'Urgent (>25 days)',
+            label: 'Urgent (>Days Supply)',
             value: urgent.length,
             icon: <AlertTriangle className="w-6 h-6" style={{ color: 'var(--color-warning-600)' }} />,
             accent: 'stat-accent-amber',
@@ -89,7 +129,7 @@ export default function DashboardPage() {
                             <AlertTriangle className="alert-icon" style={{ color: 'var(--color-warning-600)' }} />
                             <div className="alert-content">
                                 <h4 className="alert-title" style={{ color: 'var(--color-warning-900)' }}>
-                                    {urgent.length} urgent {urgent.length === 1 ? 'alert' : 'alerts'} — patients over 25 days without refill
+                                    {urgent.length} urgent {urgent.length === 1 ? 'alert' : 'alerts'} — overdue for refill
                                 </h4>
                                 <p className="alert-body" style={{ color: 'var(--color-warning-700)' }}>
                                     These patients may be at risk of missed doses.
@@ -118,6 +158,7 @@ export default function DashboardPage() {
                                 <th className="table-header-cell">Medication</th>
                                 <th className="table-header-cell">Last Order</th>
                                 <th className="table-header-cell text-center">Days Since</th>
+                                <th className="table-header-cell text-center">Supply (Days)</th>
                                 <th className="table-header-cell">Status</th>
                                 <th className="table-header-cell text-right">Action</th>
                             </tr>
@@ -126,7 +167,7 @@ export default function DashboardPage() {
                             {loading ? (
                                 [1, 2, 3, 4].map(i => (
                                     <tr key={i} className="table-row">
-                                        {[1, 2, 3, 4, 5, 6].map(j => (
+                                        {[1, 2, 3, 4, 5, 6, 7].map(j => (
                                             <td key={j} className="table-cell">
                                                 <div className="skeleton h-4 w-full" />
                                             </td>
@@ -135,7 +176,7 @@ export default function DashboardPage() {
                                 ))
                             ) : alerts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6}>
+                                    <td colSpan={7}>
                                         <div className="empty-state">
                                             <div className="empty-state-icon">
                                                 <Bell className="w-8 h-8" style={{ color: 'var(--color-neutral-400)' }} />
@@ -149,7 +190,7 @@ export default function DashboardPage() {
                                 </tr>
                             ) : (
                                 alerts.map((alert, idx) => {
-                                    const isUrgent = alert.days_since_last_order > 25;
+                                    const isUrgent = alert.days_since_last_order > alert.days_supply;
                                     return (
                                         <tr key={idx} className="table-row">
                                             <td className="table-cell font-medium" style={{ color: 'var(--color-neutral-900)' }}>
@@ -175,6 +216,9 @@ export default function DashboardPage() {
                                                     {alert.days_since_last_order}d
                                                 </span>
                                             </td>
+                                            <td className="table-cell text-center" style={{ color: 'var(--color-neutral-500)' }}>
+                                                {alert.days_supply}d
+                                            </td>
                                             <td className="table-cell">
                                                 <span className={`badge ${isUrgent ? 'badge-warning' : 'badge-success'}`}>
                                                     {isUrgent ? 'Urgent' : 'Monitor'}
@@ -182,7 +226,7 @@ export default function DashboardPage() {
                                             </td>
                                             <td className="table-cell text-right">
                                                 <button
-                                                    onClick={() => notify(alert.patient_id)}
+                                                    onClick={() => notify(alert)}
                                                     className="btn btn-outline btn-sm"
                                                 >
                                                     <Bell className="w-3.5 h-3.5" />
